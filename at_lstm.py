@@ -60,7 +60,7 @@ def AT(inputs, target, length, keep_prob1, keep_prob2, type_='all'):
 def main(_):
     word_id_mapping, w2v = load_word_embedding(FLAGS.word_id_file_path, FLAGS.embedding_file_path, FLAGS.embedding_dim)
     word_embedding = tf.Variable(w2v, dtype=tf.float32, name='word_embedding')
-    aspect_id_mapping, aspect_embed = load_aspect2id(FLAGS.aspect_id_file_path, word_id_mapping, w2v, embedding_dim)
+    aspect_id_mapping, aspect_embed = load_aspect2id(FLAGS.aspect_id_file_path, word_id_mapping, w2v, FLAGS.embedding_dim)
     aspect_embedding = tf.Variable(aspect_embed, dtype=tf.float32, name='aspect_embedding')
 
     keep_prob1 = tf.placeholder(tf.float32)

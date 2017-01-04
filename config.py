@@ -23,7 +23,7 @@ tf.app.flags.DEFINE_float('keep_prob1', 1.0, 'dropout keep prob')
 tf.app.flags.DEFINE_float('keep_prob2', 1.0, 'dropout keep prob')
 tf.app.flags.DEFINE_string('t1', 'last', 'type of hidden output')
 tf.app.flags.DEFINE_string('t2', 'last', 'type of hidden output')
-tf.app.flags.DEFINE_string('method', 'bilstm_bilstm', 'type of hidden output')
+# tf.app.flags.DEFINE_string('method', 'bilstm_bilstm', 'type of hidden output')
 tf.app.flags.DEFINE_integer('n_layer', 3, 'number of stacked rnn')
 
 
