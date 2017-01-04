@@ -105,9 +105,7 @@ def reduce_mean_with_len(inputs, length):
     return inputs
 
 
-def softmax_layer(inputs, random_base, keep_prob, l2_reg, n_class):
-    batch_size = tf.shape(inputs)[0]
-    n_hidden = tf.shape(inputs)[1]
+def softmax_layer(inputs, n_hidden, random_base, keep_prob, l2_reg, n_class):
     w = tf.get_variable(
         name='softmax_w',
         shape=[n_hidden, n_class],
