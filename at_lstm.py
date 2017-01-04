@@ -75,9 +75,9 @@ def main(_):
     inputs = tf.nn.embedding_lookup(word_embedding, x)
     aspect = tf.nn.embedding_lookup(aspect_embedding, aspect_id)
     if FLAGS.method == 'AE':
-        prob = AE(inputs, aspect, sen_len, keep_prob1, keep_prob2, FLAGS.t)
+        prob = AE(inputs, aspect, sen_len, keep_prob1, keep_prob2, FLAGS.t1)
     elif FLAGS.method == 'AT':
-        prob = AT(inputs, aspect, sen_len, keep_prob1, keep_prob2, FLAGS.t)
+        prob = AT(inputs, aspect, sen_len, keep_prob1, keep_prob2, FLAGS.t1)
 
     loss = loss_func(y, prob)
     acc_num, acc_prob = acc_func(y, prob)
