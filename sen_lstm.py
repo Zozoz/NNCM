@@ -96,26 +96,27 @@ def main(_):
                 _, step, summary = sess.run([optimizer, global_step, train_summary_op], feed_dict=train)
                 train_summary_writer.add_summary(summary, step)
 
-            acc, cost, cnt = 0., 0., 0
-            flag = True
-            summary, step = None, None
-            for test, num in get_batch_data(te_x, te_sen_len, te_y, 2000, 1.0, 1.0, False):
-                _loss, _acc, _summary, _step = sess.run(
-                    [loss, acc_num, validate_summary_op, global_step],
-                    feed_dict=test)
-                acc += _acc
-                cost += _loss * num
-                cnt += num
-                if flag:
-                    summary = _summary
-                    step = _step
-                    flag = False
-            print 'all samples={}, correct prediction={}'.format(cnt, acc)
-            test_summary_writer.add_summary(summary, step)
-            saver.save(sess, save_dir, global_step=step)
-            print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(i, cost / cnt, acc / cnt)
-            if acc / cnt > max_acc:
-                max_acc = acc / cnt
+            if FLAGS.display_step % 10 == 0:
+                acc, cost, cnt = 0., 0., 0
+                flag = True
+                summary, step = None, None
+                for test, num in get_batch_data(te_x, te_sen_len, te_y, 2200, 1.0, 1.0, False):
+                    _loss, _acc, _summary, _step = sess.run(
+                        [loss, acc_num, validate_summary_op, global_step],
+                        feed_dict=test)
+                    acc += _acc
+                    cost += _loss * num
+                    cnt += num
+                    if flag:
+                        summary = _summary
+                        step = _step
+                        flag = False
+                print 'all samples={}, correct prediction={}'.format(cnt, acc)
+                test_summary_writer.add_summary(summary, step)
+                saver.save(sess, save_dir, global_step=step)
+                print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(step, cost / cnt, acc / cnt)
+                if acc / cnt > max_acc:
+                    max_acc = acc / cnt
 
         print 'Optimization Finished! Max acc={}'.format(max_acc)
 
