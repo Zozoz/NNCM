@@ -112,15 +112,15 @@ def main(_):
 
         tr_x, tr_sen_len, tr_target_word, tr_y = load_inputs_twitter_at(
             FLAGS.train_file_path,
-            FLAGS.word_id_mapping,
-            FLAGS.aspect_id_mapping,
+            word_id_mapping,
+            aspect_id_mapping,
             FLAGS.max_sentence_len,
             FLAGS.type_
         )
         te_x, te_sen_len, te_target_word, te_y = load_inputs_twitter_at(
             FLAGS.test_file_path,
-            FLAGS.word_id_mapping,
-            FLAGS.aspect_id_mapping,
+            word_id_mapping,
+            aspect_id_mapping,
             FLAGS.max_sentence_len,
             FLAGS.type_
         )
