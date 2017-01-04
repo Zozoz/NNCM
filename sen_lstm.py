@@ -16,7 +16,7 @@ def bilstm(inputs, length, keep_prob1, keep_prob2, type_='last'):
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
     cell = tf.nn.rnn_cell.LSTMCell
     hidden = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, length, FLAGS.max_sentence_len, 'bilstm', type_)
-    return softmax_layer(hidden, FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+    return softmax_layer(hidden, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
 
 
 def main(_):
