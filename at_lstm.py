@@ -95,15 +95,16 @@ def main(_):
         FLAGS.n_hidden,
         FLAGS.n_class
     )
-    import time
-    timestamp = str(int(time.time()))
-    _dir = 'summary/' + str(timestamp) + '_' + title
-    train_summary_op, test_summary_op, validate_summary_op, \
-    train_summary_writer, test_summary_writer, validate_summary_writer = summary_func(loss, acc_prob, _dir, title)
-
-    saver = saver_func('model/' + str(timestamp) + '_' + title)
 
     with tf.Session() as sess:
+        import time
+        timestamp = str(int(time.time()))
+        _dir = 'summary/' + str(timestamp) + '_' + title
+        train_summary_op, test_summary_op, validate_summary_op, \
+        train_summary_writer, test_summary_writer, validate_summary_writer = summary_func(loss, acc_prob, _dir, title, sess)
+
+        saver = saver_func('model/' + str(timestamp) + '_' + title)
+
         init = tf.global_variables_initializer()
         sess.run(init)
 

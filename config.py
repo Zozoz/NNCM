@@ -59,7 +59,7 @@ def train_func(loss, r, global_step, optimizer=None):
         # optimizer = tf.train.AdagradOptimizer(learning_rate=r).minimize(loss, global_step=global_step)
 
 
-def summary_func(loss, acc, _dir, title):
+def summary_func(loss, acc, _dir, title, sess):
     summary_loss = tf.scalar_summary('loss' + title, loss)
     summary_acc = tf.scalar_summary('acc' + title, acc)
     train_summary_op = tf.merge_summary([summary_loss, summary_acc])
