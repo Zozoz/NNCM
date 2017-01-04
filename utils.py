@@ -41,7 +41,7 @@ def load_w2v(w2v_file, embedding_dim, is_skip=False):
     cnt = 0
     for line in fp:
         cnt += 1
-        line = line.split()
+        line = line.decode('utf8').split()
         if len(line) != embedding_dim + 1:
             print 'a bad word embedding: {}'.format(line[0])
             continue
@@ -231,7 +231,7 @@ def load_inputs_sentence(input_file, word_id_file, sentence_len, encoding='utf8'
         xx = []
         for word in words:
             if word in word_to_id:
-              xx.append(word_to_id[word])
+                xx.append(word_to_id[word])
         sen_len.append(len(xx))
         xx = xx + [0] * (sentence_len - len(xx))
         x.append(xx)
