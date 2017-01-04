@@ -136,8 +136,6 @@ def main(_):
                 yield feed_dict, len(index)
 
         max_acc = 0.
-        max_alpha = None
-        max_ty, max_py = None, None
         for i in xrange(FLAGS.n_iter):
             for train, _ in get_batch_data(tr_x, tr_sen_len, tr_y, tr_target_word, FLAGS.batch_size,
                                                 FLAGS.keep_prob1, FLAGS.keep_prob2):
@@ -147,11 +145,9 @@ def main(_):
             acc, loss, cnt = 0., 0., 0
             flag = True
             summary, step = None, None
-            alpha = None
-            ty, py = None, None
             for test, num in get_batch_data(te_x, te_sen_len, te_y, te_target_word, 2000, 1.0, 1.0, False):
-                _loss, _acc, _summary, _step, alpha, ty, py = sess.run(
-                    [loss, acc_num, validate_summary_op, global_step, FLAGS.alpha, true_y, pred_y],
+                _loss, _acc, _summary = sess.run(
+                    [loss, acc_num, validate_summary_op, global_step],
                     feed_dict=test)
                 acc += _acc
                 loss += _loss * num
@@ -160,23 +156,14 @@ def main(_):
                     summary = _summary
                     step = _step
                     flag = False
-                    alpha = alpha
-                    ty = ty
-                    py = py
             print 'all samples={}, correct prediction={}'.format(cnt, acc)
             test_summary_writer.add_summary(summary, step)
             saver.save(sess, save_dir, global_step=step)
             print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(i, loss / cnt, acc / cnt)
             if acc / cnt > max_acc:
                 max_acc = acc / cnt
-                max_alpha = alpha
-                max_ty = ty
-                max_py = py
 
         print 'Optimization Finished! Max acc={}'.format(max_acc)
-        fp = open('weight.txt', 'w')
-        for y1, y2, ws in zip(max_ty, max_py, max_alpha):
-            fp.write(str(y1) + ' ' + str(y2) + ' ' + ' '.join([str(w) for w in ws]) + '\n')
 
         print 'Learning_rate={}, iter_num={}, batch_size={}, hidden_num={}, l2={}'.format(
             FLAGS.learning_rate,
