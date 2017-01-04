@@ -44,7 +44,7 @@ def loss_func(y, prob):
 
 
 def acc_func(y, prob):
-    correct_pred = tf.equal(tf.argmax(prob, 1), tf.argmax(self.y, 1))
+    correct_pred = tf.equal(tf.argmax(prob, 1), tf.argmax(y, 1))
     acc_num = tf.reduce_sum(tf.cast(correct_pred, tf.int32))
     acc_prob = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
     return acc_num, acc_prob
