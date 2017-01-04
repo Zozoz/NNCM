@@ -4,6 +4,8 @@
 # email: zhengshiliang0@gmail.com
 
 
+import sklearn
+import numpy as np
 import tensorflow as tf
 from nn_layer import bi_dynamic_rnn, softmax_layer
 from att_layer import dot_produce_attention_layer
@@ -34,6 +36,8 @@ def main(_):
     inputs = tf.nn.embedding_lookup(word_embedding, x)
 
     prob = bilstm(inputs, sen_len, keep_prob1, keep_prob2, FLAGS.t1)
+
+    y_p = tf.argmax(prob, 1)
 
     loss = loss_func(y, prob)
     acc_num, acc_prob = acc_func(y, prob)
@@ -87,11 +91,11 @@ def main(_):
                     keep_prob1: kp1,
                     keep_prob2: kp2,
                 }
-                yield feed_dict, len(index)
+                yield feed_dict, len(index), yi[index]
 
         max_acc = 0.
         for i in xrange(FLAGS.n_iter):
-            for train, _ in get_batch_data(tr_x, tr_sen_len, tr_y, FLAGS.batch_size,
+            for train, _, _ in get_batch_data(tr_x, tr_sen_len, tr_y, FLAGS.batch_size,
                                                 FLAGS.keep_prob1, FLAGS.keep_prob2):
                 _, step, summary = sess.run([optimizer, global_step, train_summary_op], feed_dict=train)
                 train_summary_writer.add_summary(summary, step)
@@ -100,9 +104,9 @@ def main(_):
                 acc, cost, cnt = 0., 0., 0
                 flag = True
                 summary, step = None, None
-                for test, num in get_batch_data(te_x, te_sen_len, te_y, 2200, 1.0, 1.0, False):
-                    _loss, _acc, _summary, _step = sess.run(
-                        [loss, acc_num, validate_summary_op, global_step],
+                for test, num, test_label in get_batch_data(te_x, te_sen_len, te_y, 2200, 1.0, 1.0, False):
+                    _loss, _acc, _summary, _step, y_pred = sess.run(
+                        [loss, acc_num, validate_summary_op, global_step, y_p],
                         feed_dict=test)
                     acc += _acc
                     cost += _loss * num
@@ -111,6 +115,11 @@ def main(_):
                         summary = _summary
                         step = _step
                         flag = False
+                        y_true = np.argmax(test_label, 1)
+                        print "Precision", sklearn.metrics.precision_score(y_true, y_pred)
+                        print "Recall", sklearn.metrics.recall_score(y_true, y_pred)
+                        print "f1_score", sklearn.metrics.f1_score(y_true, y_pred)
+                        print
                 print 'all samples={}, correct prediction={}'.format(cnt, acc)
                 test_summary_writer.add_summary(summary, step)
                 saver.save(sess, save_dir, global_step=step)
