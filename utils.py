@@ -215,3 +215,32 @@ def load_inputs_twitter_at(input_file, word_id_file, aspect_id_file, sentence_le
     return x, np.asarray(sen_len), np.asarray(aspect_words), np.asarray(y)
 
 
+def load_inputs_sentence(input_file, word_id_file, sentence_len, encoding='utf8'):
+    if type(word_id_file) is str:
+        word_to_id = load_word_id_mapping(word_id_file)
+    else:
+        word_to_id = word_id_file
+    print 'load word-to-id done!'
+
+    x, y, sen_len = [], [], []
+    for line in open(input_file):
+        line = line.lower().decode('utf8', 'ignore').split('||')
+        y.append(line[0])
+
+        words = ' '.join(line[1:]).split()
+        xx = []
+        for word in words:
+            if word in word_to_id:
+              xx.append(word_to_id[word])
+        sen_len.append(len(xx))
+        xx = xx + [0] * (sentence_len - len(xx))
+        x.append(xx)
+    y = change_y_to_onehot(y)
+    print 'load input {} done!'.format(input_file)
+
+    return np.asarray(x), np.asarray(y), np.asarray(sen_len)
+
+
+
+
+

@@ -22,6 +22,7 @@ def dot_produce_attention_layer(inputs, length, n_hidden, l2_reg, random_base, l
     """
     :param inputs: batch * max_len * embedding_dim
     :param length: batch * 1
+    :param n_hidden:
     :param l2_reg:
     :param random_base:
     :param layer_id: layer's identical id
@@ -45,6 +46,7 @@ def mlp_attention_layer(inputs, length, n_hidden, l2_reg, random_base, layer_id=
     """
     :param inputs: batch * max_len * embedding_dim
     :param length: batch * 1
+    :param n_hidden:
     :param l2_reg:
     :param random_base:
     :param layer_id: layer's identical id
