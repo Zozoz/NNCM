@@ -99,7 +99,7 @@ def main(_):
     timestamp = str(int(time.time()))
     _dir = 'summary/' + str(timestamp) + '_' + title
     train_summary_op, test_summary_op, validate_summary_op, \
-    train_summary_writer, test_summary_writer, validate_summary_writer = summary_func(loss, acc_prob, _dir)
+    train_summary_writer, test_summary_writer, validate_summary_writer = summary_func(loss, acc_prob, _dir, title)
 
     saver = saver_func('model/' + str(timestamp) + '_' + title)
 
