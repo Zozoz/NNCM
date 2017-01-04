@@ -67,15 +67,15 @@ def main(_):
 
         # saver.restore(sess, '/-')
 
-        tr_x, tr_sen_len, tr_target_word, tr_y = load_inputs_sentence(
+        tr_x, tr_sen_len, tr_y = load_inputs_sentence(
             FLAGS.train_file_path,
             word_id_mapping,
-            FLAGS.max_sentence_len,
+            FLAGS.max_sentence_len
         )
-        te_x, te_sen_len, te_target_word, te_y = load_inputs_sentence(
+        te_x, te_sen_len, te_y = load_inputs_sentence(
             FLAGS.test_file_path,
             word_id_mapping,
-            FLAGS.max_sentence_len,
+            FLAGS.max_sentence_len
         )
 
         def get_batch_data(xi, sen_leni, yi, batch_size, kp1, kp2, is_shuffle=True):
