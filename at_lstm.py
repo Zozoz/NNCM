@@ -105,7 +105,7 @@ def main(_):
 
         saver = saver_func('model/' + str(timestamp) + '_' + title)
 
-        init = tf.global_variables_initializer()
+        init = tf.initialize_all_variables()
         sess.run(init)
 
         # saver.restore(sess, '/-')
