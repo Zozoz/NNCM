@@ -115,14 +115,12 @@ def main(_):
             word_id_mapping,
             aspect_id_mapping,
             FLAGS.max_sentence_len,
-            FLAGS.type_
         )
         te_x, te_sen_len, te_target_word, te_y = load_inputs_twitter_at(
             FLAGS.test_file_path,
             word_id_mapping,
             aspect_id_mapping,
             FLAGS.max_sentence_len,
-            FLAGS.type_
         )
 
         max_acc = 0.
