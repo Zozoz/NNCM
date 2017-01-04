@@ -142,7 +142,7 @@ def main(_):
                 _, step, summary = sess.run([optimizer, global_step, train_summary_op], feed_dict=train)
                 train_summary_writer.add_summary(summary, step)
 
-            acc, loss, cnt = 0., 0., 0
+            acc, cost, cnt = 0., 0., 0
             flag = True
             summary, step = None, None
             for test, num in get_batch_data(te_x, te_sen_len, te_y, te_target_word, 2000, 1.0, 1.0, False):
@@ -150,7 +150,7 @@ def main(_):
                     [loss, acc_num, validate_summary_op, global_step],
                     feed_dict=test)
                 acc += _acc
-                loss += _loss * num
+                cost += _loss * num
                 cnt += num
                 if flag:
                     summary = _summary
@@ -159,7 +159,7 @@ def main(_):
             print 'all samples={}, correct prediction={}'.format(cnt, acc)
             test_summary_writer.add_summary(summary, step)
             saver.save(sess, save_dir, global_step=step)
-            print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(i, loss / cnt, acc / cnt)
+            print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(i, cost / cnt, acc / cnt)
             if acc / cnt > max_acc:
                 max_acc = acc / cnt
 
