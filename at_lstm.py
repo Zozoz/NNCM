@@ -35,7 +35,7 @@ def AT(inputs, target, length, keep_prob1, keep_prob2, type_='all'):
     hiddens = dynamic_rnn(cell, in_t, FLAGS.n_hidden, length, FLAGS.max_sentence_len, 'AT', type_)
     h_t = tf.reshape(tf.concat(2, [hiddens, target]), [-1, FLAGS.n_hidden + FLAGS.embedding_dim])
 
-    alpha = dot_produce_attention_layer(h_t, length, FLAGS.l2_reg, FLAGS.random_base, 1)
+    alpha = dot_produce_attention_layer(h_t, length, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
 
     r = tf.reshape(tf.batch_matmul(alpha, hiddens), [-1, FLAGS.n_hidden])
     index = tf.range(0, batch_size) * FLAGS.max_sentence_len + (length - 1)

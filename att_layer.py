@@ -18,7 +18,7 @@ def softmax_with_len(inputs, length, max_len):
     return inputs / _sum
 
 
-def dot_produce_attention_layer(inputs, length, l2_reg, random_base, layer_id=1):
+def dot_produce_attention_layer(inputs, length, n_hidden, l2_reg, random_base, layer_id=1):
     """
     :param inputs: batch * max_len * embedding_dim
     :param length: batch * 1
@@ -27,7 +27,8 @@ def dot_produce_attention_layer(inputs, length, l2_reg, random_base, layer_id=1)
     :param layer_id: layer's identical id
     :return: batch * 1 * max_len
     """
-    batch_size, max_len, n_hidden = tf.shape(inputs)
+    batch_size = tf.shape(inputs)[0]
+    max_len = tf.shape(inputs)[1]
     u = tf.get_variable(
         name='att_u_' + str(layer_id),
         shape=[n_hidden, 1],
@@ -40,7 +41,7 @@ def dot_produce_attention_layer(inputs, length, l2_reg, random_base, layer_id=1)
     return alpha
 
 
-def mlp_attention_layer(inputs, length, l2_reg, random_base, layer_id=1):
+def mlp_attention_layer(inputs, length, n_hidden, l2_reg, random_base, layer_id=1):
     """
     :param inputs: batch * max_len * embedding_dim
     :param length: batch * 1
@@ -49,7 +50,8 @@ def mlp_attention_layer(inputs, length, l2_reg, random_base, layer_id=1):
     :param layer_id: layer's identical id
     :return: batch * 1 * max_len
     """
-    batch_size, max_len, n_hidden = tf.shape(inputs)
+    batch_size = tf.shape(inputs)[0]
+    max_len = tf.shape(inputs)[1]
     w = tf.get_variable(
         name='att_w_' + str(layer_id),
         shape=[n_hidden, n_hidden],
