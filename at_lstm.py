@@ -123,12 +123,12 @@ def main(_):
             FLAGS.max_sentence_len,
         )
 
-        def get_batch_data(x, sen_len, y, target_words, batch_size, kp1, kp2, is_shuffle=True):
-            for index in batch_index(len(y), batch_size, 1, is_shuffle):
+        def get_batch_data(xi, sen_leni, yi, target_words, batch_size, kp1, kp2, is_shuffle=True):
+            for index in batch_index(len(yy), batch_size, 1, is_shuffle):
                 feed_dict = {
-                    x: x[index],
-                    y: y[index],
-                    sen_len: sen_len[index],
+                    x: xi[index],
+                    y: yi[index],
+                    sen_len: sen_leni[index],
                     aspect_id: target_words[index],
                     keep_prob1: kp1,
                     keep_prob2: kp2,
