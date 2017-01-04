@@ -238,7 +238,7 @@ def load_inputs_sentence(input_file, word_id_file, sentence_len, encoding='utf8'
     y = change_y_to_onehot(y)
     print 'load input {} done!'.format(input_file)
 
-    return np.asarray(x), np.asarray(y), np.asarray(sen_len)
+    return np.asarray(x), np.asarray(sen_len), np.asarray(y)
 
 
 
