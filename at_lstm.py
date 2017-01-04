@@ -123,6 +123,18 @@ def main(_):
             FLAGS.max_sentence_len,
         )
 
+        def get_batch_data(x, sen_len, y, target_words, batch_size, kp1, kp2, is_shuffle=True):
+            for index in batch_index(len(y), batch_size, 1, is_shuffle):
+                feed_dict = {
+                    x: x[index],
+                    y: y[index],
+                    sen_len: sen_len[index],
+                    aspect_id: target_words[index],
+                    keep_prob1: kp1,
+                    keep_prob2: kp2,
+                }
+                yield feed_dict, len(index)
+
         max_acc = 0.
         max_alpha = None
         max_ty, max_py = None, None
@@ -173,18 +185,6 @@ def main(_):
             FLAGS.n_hidden,
             FLAGS.l2_reg
         )
-
-        def get_batch_data(x, sen_len, y, target_words, batch_size, kp1, kp2, is_shuffle=True):
-            for index in batch_index(len(y), batch_size, 1, is_shuffle):
-                feed_dict = {
-                    x: x[index],
-                    y: y[index],
-                    sen_len: sen_len[index],
-                    aspect_id: target_words[index],
-                    keep_prob1: kp1,
-                    keep_prob2: kp2,
-                }
-                yield feed_dict, len(index)
 
 
 
