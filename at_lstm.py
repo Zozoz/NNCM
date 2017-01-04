@@ -146,7 +146,7 @@ def main(_):
             flag = True
             summary, step = None, None
             for test, num in get_batch_data(te_x, te_sen_len, te_y, te_target_word, 2000, 1.0, 1.0, False):
-                _loss, _acc, _summary = sess.run(
+                _loss, _acc, _summary, step = sess.run(
                     [loss, acc_num, validate_summary_op, global_step],
                     feed_dict=test)
                 acc += _acc
