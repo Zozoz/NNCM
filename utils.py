@@ -229,9 +229,13 @@ def load_inputs_sentence(input_file, word_id_file, sentence_len, encoding='utf8'
 
         words = ' '.join(line[1:]).split()
         xx = []
+        i = 0
         for word in words:
             if word in word_to_id:
                 xx.append(word_to_id[word])
+                i += 1
+                if i >= sentence_len:
+                    break
         sen_len.append(len(xx))
         xx = xx + [0] * (sentence_len - len(xx))
         x.append(xx)
