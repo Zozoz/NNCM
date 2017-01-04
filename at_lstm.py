@@ -21,7 +21,7 @@ def AE(inputs, target, length, keep_prob1, keep_prob2, type_='last'):
 
     cell = tf.nn.rnn_cell.LSTMCell
     outputs = dynamic_rnn(cell, inputs, FLAGS.n_hidden, length, FLAGS.max_sentence_len, 'AE', type_)
-    return softmax_layer(outputs, FLAGS.random_base, keep_prob2)
+    return softmax_layer(outputs, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
 
 
 def AT(inputs, target, length, keep_prob1, keep_prob2, type_='all'):
@@ -54,7 +54,7 @@ def AT(inputs, target, length, keep_prob1, keep_prob2, type_='all'):
         regularizer=tf.contrib.layers.l2_regularizer(FLAGS.l2_reg)
     )
     h = tf.tanh(tf.matmul(r, Wp) + tf.matmul(hn, Wx))
-    return softmax_layer(h, FLAGS.random_base, keep_prob2)
+    return softmax_layer(h, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
 
 
 def main(_):

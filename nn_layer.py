@@ -105,20 +105,20 @@ def reduce_mean_with_len(inputs, length):
     return inputs
 
 
-def softmax_layer(inputs, random_base, keep_prob):
+def softmax_layer(inputs, random_base, keep_prob, l2_reg, n_class):
     batch_size = tf.shape(inputs)[0]
     n_hidden = tf.shape(inputs)[1]
     w = tf.get_variable(
         name='softmax_w',
-        shape=[n_hidden, FLAGS.n_class],
+        shape=[n_hidden, n_class],
         initializer=tf.random_uniform_initializer(-random_base, random_base),
-        regularizer=tf.contrib.layers.l2_regularizer(FLAGS.l2_reg)
+        regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
     )
     b = tf.get_variable(
         name='softmax_b',
-        shape=[FLAGS.n_class],
+        shape=[n_class],
         initializer=tf.random_uniform_initializer(-random_base, random_base),
-        regularizer=tf.contrib.layers.l2_regularizer(FLAGS.l2_reg)
+        regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
     )
     with tf.name_scope('softmax'):
         outputs = tf.nn.dropout(inputs, keep_prob=keep_prob)
