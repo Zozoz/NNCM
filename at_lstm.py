@@ -124,7 +124,7 @@ def main(_):
         )
 
         def get_batch_data(xi, sen_leni, yi, target_words, batch_size, kp1, kp2, is_shuffle=True):
-            for index in batch_index(len(yy), batch_size, 1, is_shuffle):
+            for index in batch_index(len(yi), batch_size, 1, is_shuffle):
                 feed_dict = {
                     x: xi[index],
                     y: yi[index],
