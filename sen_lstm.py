@@ -4,7 +4,7 @@
 # email: zhengshiliang0@gmail.com
 
 
-from sklearn import precision_score, recall_score, f1_score
+from sklearn.metrics import precision_score, recall_score, f1_score
 import numpy as np
 import tensorflow as tf
 from nn_layer import bi_dynamic_rnn, softmax_layer
