@@ -65,7 +65,7 @@ def main(_):
         train_summary_writer, test_summary_writer, validate_summary_writer = summary_func(loss, acc_prob, _dir, title, sess)
 
         save_dir = 'model/' + str(timestamp) + '_' + title + '/'
-        save_dir = 'model/' + FLAGS.train_file_path + '_' + str(timestamp) + '/'
+        save_dir = 'model/' + FLAGS.train_file_path + '/'
         saver = saver_func(save_dir)
 
         init = tf.initialize_all_variables()
@@ -97,11 +97,14 @@ def main(_):
 
         max_acc = 0.
         for i in xrange(FLAGS.n_iter):
+            step = None
             for train, _ in get_batch_data(tr_x, tr_sen_len, tr_y, FLAGS.batch_size,
                                                 FLAGS.keep_prob1, FLAGS.keep_prob2):
                 _, step, summary = sess.run([optimizer, global_step, train_summary_op], feed_dict=train)
                 train_summary_writer.add_summary(summary, step)
 
+            saver.save(sess, save_dir, global_step=step)
+                """
                 if step % FLAGS.display_step == 0:
                     acc, cost, cnt = 0., 0., 0
                     flag = True
@@ -142,8 +145,9 @@ def main(_):
                         for pb in y_prob:
                             fp.write(str(pb[0]) + ' ' + str(pb[1]) + '\n')
                         break
+                """
 
-        print 'Optimization Finished! Max acc={}'.format(max_acc)
+        # print 'Optimization Finished! Max acc={}'.format(max_acc)
 
         print 'Learning_rate={}, iter_num={}, batch_size={}, hidden_num={}, l2={}'.format(
             FLAGS.learning_rate,
