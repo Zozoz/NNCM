@@ -130,11 +130,10 @@ def main(_):
                     r = (r0 + r1) / 2
                     print 'macro R:', r
                     print 'macro F1:', 2 * p * r / (p + r)
-                    print
                     print 'all samples={}, correct prediction={}'.format(cnt, acc)
                     test_summary_writer.add_summary(summary, step)
                     saver.save(sess, save_dir, global_step=step)
-                    print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(step, cost / cnt, acc / cnt)
+                    print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}\n'.format(step, cost / cnt, acc / cnt)
                     if acc / cnt > max_acc:
                         max_acc = acc / cnt
                     if step == 100:
