@@ -93,11 +93,11 @@ def main(_):
                     keep_prob1: kp1,
                     keep_prob2: kp2,
                 }
-                yield feed_dict, len(index), yi[index]
+                yield feed_dict, len(index)
 
         max_acc = 0.
         for i in xrange(FLAGS.n_iter):
-            for train, _, _ in get_batch_data(tr_x, tr_sen_len, tr_y, FLAGS.batch_size,
+            for train, _ in get_batch_data(tr_x, tr_sen_len, tr_y, FLAGS.batch_size,
                                                 FLAGS.keep_prob1, FLAGS.keep_prob2):
                 _, step, summary = sess.run([optimizer, global_step, train_summary_op], feed_dict=train)
                 train_summary_writer.add_summary(summary, step)
@@ -105,39 +105,44 @@ def main(_):
                 if step % FLAGS.display_step == 0:
                     acc, cost, cnt = 0., 0., 0
                     flag = True
-                    summary, step = None, None
-                    for test, num, test_label in get_batch_data(te_x, te_sen_len, te_y, 2200, 1.0, 1.0, False):
-                        _loss, _acc, _summary, _step, y_pred, y_prob = sess.run(
+                    summary = None
+                    y_prob = []
+                    y_pred = []
+                    for test, num in get_batch_data(te_x, te_sen_len, te_y, 2200, 1.0, 1.0, False):
+                        _loss, _acc, _summary, _step, y_pred_tmp, y_prob_tmp = sess.run(
                             [loss, acc_num, validate_summary_op, global_step, y_p, prob],
                             feed_dict=test)
+                        y_prob.extend(y_prob_tmp)
+                        y_pred.extend(y_pred_tmp)
                         acc += _acc
                         cost += _loss * num
                         cnt += num
                         if flag:
                             summary = _summary
-                            step = _step
                             flag = False
-                            y_true = np.argmax(test_label, 1)
-                            p0 = precision_score(y_true, y_pred, pos_label=0)
-                            p1 = precision_score(y_true, y_pred, pos_label=1)
-                            p = (p0 + p1) / 2
-                            print 'macro P:', p
-                            r0 = recall_score(y_true, y_pred, pos_label=0)
-                            r1 = recall_score(y_true, y_pred, pos_label=1)
-                            r = (r0 + r1) / 2
-                            print 'macro R:', r
-                            print 'macro F1:', 2 * p * r / (p + r)
-                            print
-                        if step == 100:
-                            fp = open(FLAGS.prob_file, 'w')
-                            for pb in y_prob:
-                                fp.write(str(pb[0]) + ' ' + str(pb[1]) + '\n')
+                    y_true = np.argmax(test_y, 1)
+                    p0 = precision_score(y_true, y_pred, pos_label=0)
+                    p1 = precision_score(y_true, y_pred, pos_label=1)
+                    p = (p0 + p1) / 2
+                    print 'macro P:', p
+                    r0 = recall_score(y_true, y_pred, pos_label=0)
+                    r1 = recall_score(y_true, y_pred, pos_label=1)
+                    r = (r0 + r1) / 2
+                    print 'macro R:', r
+                    print 'macro F1:', 2 * p * r / (p + r)
+                    print
                     print 'all samples={}, correct prediction={}'.format(cnt, acc)
                     test_summary_writer.add_summary(summary, step)
                     saver.save(sess, save_dir, global_step=step)
                     print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(step, cost / cnt, acc / cnt)
                     if acc / cnt > max_acc:
                         max_acc = acc / cnt
+                    if step == 100:
+                        fp = open(FLAGS.prob_file, 'w')
+                        fp.write(str(p) + ' ' + str(r) + ' ' + str(r) + '\n')
+                        for pb in y_prob:
+                            fp.write(str(pb[0]) + ' ' + str(pb[1]) + '\n')
+                        break
 
         print 'Optimization Finished! Max acc={}'.format(max_acc)
 
