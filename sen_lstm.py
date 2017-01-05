@@ -116,9 +116,9 @@ def main(_):
                             step = _step
                             flag = False
                             y_true = np.argmax(test_label, 1)
-                            print "Precision", precision_score(y_true, y_pred)
-                            print "Recall", recall_score(y_true, y_pred)
-                            print "f1_score", f1_score(y_true, y_pred)
+                            print "Precision", precision_score(y_true, y_pred, average='macro')
+                            print "Recall", recall_score(y_true, y_pred, average='macro')
+                            print "f1_score", f1_score(y_true, y_pred, average='macro')
                             print
                     print 'all samples={}, correct prediction={}'.format(cnt, acc)
                     test_summary_writer.add_summary(summary, step)
