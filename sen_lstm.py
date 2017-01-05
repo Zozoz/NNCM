@@ -100,32 +100,32 @@ def main(_):
                 _, step, summary = sess.run([optimizer, global_step, train_summary_op], feed_dict=train)
                 train_summary_writer.add_summary(summary, step)
 
-            if FLAGS.display_step % 10 == 0:
-                acc, cost, cnt = 0., 0., 0
-                flag = True
-                summary, step = None, None
-                for test, num, test_label in get_batch_data(te_x, te_sen_len, te_y, 2200, 1.0, 1.0, False):
-                    _loss, _acc, _summary, _step, y_pred = sess.run(
-                        [loss, acc_num, validate_summary_op, global_step, y_p],
-                        feed_dict=test)
-                    acc += _acc
-                    cost += _loss * num
-                    cnt += num
-                    if flag:
-                        summary = _summary
-                        step = _step
-                        flag = False
-                        y_true = np.argmax(test_label, 1)
-                        print "Precision", sklearn.metrics.precision_score(y_true, y_pred)
-                        print "Recall", sklearn.metrics.recall_score(y_true, y_pred)
-                        print "f1_score", sklearn.metrics.f1_score(y_true, y_pred)
-                        print
-                print 'all samples={}, correct prediction={}'.format(cnt, acc)
-                test_summary_writer.add_summary(summary, step)
-                saver.save(sess, save_dir, global_step=step)
-                print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(step, cost / cnt, acc / cnt)
-                if acc / cnt > max_acc:
-                    max_acc = acc / cnt
+                if step % FLAGS.display_step == 0:
+                    acc, cost, cnt = 0., 0., 0
+                    flag = True
+                    summary, step = None, None
+                    for test, num, test_label in get_batch_data(te_x, te_sen_len, te_y, 2200, 1.0, 1.0, False):
+                        _loss, _acc, _summary, _step, y_pred = sess.run(
+                            [loss, acc_num, validate_summary_op, global_step, y_p],
+                            feed_dict=test)
+                        acc += _acc
+                        cost += _loss * num
+                        cnt += num
+                        if flag:
+                            summary = _summary
+                            step = _step
+                            flag = False
+                            y_true = np.argmax(test_label, 1)
+                            print "Precision", sklearn.metrics.precision_score(y_true, y_pred)
+                            print "Recall", sklearn.metrics.recall_score(y_true, y_pred)
+                            print "f1_score", sklearn.metrics.f1_score(y_true, y_pred)
+                            print
+                    print 'all samples={}, correct prediction={}'.format(cnt, acc)
+                    test_summary_writer.add_summary(summary, step)
+                    saver.save(sess, save_dir, global_step=step)
+                    print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(step, cost / cnt, acc / cnt)
+                    if acc / cnt > max_acc:
+                        max_acc = acc / cnt
 
         print 'Optimization Finished! Max acc={}'.format(max_acc)
 
