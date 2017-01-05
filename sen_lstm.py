@@ -4,7 +4,7 @@
 # email: zhengshiliang0@gmail.com
 
 
-import sklearn
+from sklearn import precision_score, recall_score, f1_score
 import numpy as np
 import tensorflow as tf
 from nn_layer import bi_dynamic_rnn, softmax_layer
@@ -116,9 +116,9 @@ def main(_):
                             step = _step
                             flag = False
                             y_true = np.argmax(test_label, 1)
-                            print "Precision", sklearn.metrics.precision_score(y_true, y_pred)
-                            print "Recall", sklearn.metrics.recall_score(y_true, y_pred)
-                            print "f1_score", sklearn.metrics.f1_score(y_true, y_pred)
+                            print "Precision", precision_score(y_true, y_pred)
+                            print "Recall", recall_score(y_true, y_pred)
+                            print "f1_score", f1_score(y_true, y_pred)
                             print
                     print 'all samples={}, correct prediction={}'.format(cnt, acc)
                     test_summary_writer.add_summary(summary, step)
