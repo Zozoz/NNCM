@@ -120,7 +120,7 @@ def main(_):
                         if flag:
                             summary = _summary
                             flag = False
-                    y_true = np.argmax(test_y, 1)
+                    y_true = np.argmax(te_y, 1)
                     p0 = precision_score(y_true, y_pred, pos_label=0)
                     p1 = precision_score(y_true, y_pred, pos_label=1)
                     p = (p0 + p1) / 2
