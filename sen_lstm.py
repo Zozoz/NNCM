@@ -60,7 +60,7 @@ def main(_):
         import time
         timestamp = str(int(time.time()))
         _dir = 'summary/' + str(timestamp) + '_' + title
-        save_dir = 'summary/' + FLAGS.train_file_path + '_' + str(timestamp) + '/'
+        _dir = 'summary/' + FLAGS.train_file_path + '_' + str(timestamp) + '/'
         train_summary_op, test_summary_op, validate_summary_op, \
         train_summary_writer, test_summary_writer, validate_summary_writer = summary_func(loss, acc_prob, _dir, title, sess)
 
@@ -128,7 +128,7 @@ def main(_):
                             print 'macro R:', r
                             print 'macro F1:', 2 * p * r / (p + r)
                             print
-                        if step == 40:
+                        if step == 100:
                             fp = open(FLAGS.prob_file, 'w')
                             for pb in y_prob:
                                 fp.write(str(pb[0]) + ' ' + str(pb[1]) + '\n')
