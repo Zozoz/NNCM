@@ -122,7 +122,7 @@ def main(_):
                             print 'macro P:', p
                             r0 = recall_score(y_true, y_pred, pos_label=0)
                             r1 = recall_score(y_true, y_pred, pos_label=1)
-                            r = (r0 + r1)
+                            r = (r0 + r1) / 2
                             print 'macro R:', r
                             print 'macro F1:', 2 * p * r / (p + r)
                             print
