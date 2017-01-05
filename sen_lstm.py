@@ -105,8 +105,8 @@ def main(_):
                     flag = True
                     summary, step = None, None
                     for test, num, test_label in get_batch_data(te_x, te_sen_len, te_y, 2200, 1.0, 1.0, False):
-                        _loss, _acc, _summary, _step, y_pred = sess.run(
-                            [loss, acc_num, validate_summary_op, global_step, y_p],
+                        _loss, _acc, _summary, _step, y_pred, y_prob = sess.run(
+                            [loss, acc_num, validate_summary_op, global_step, y_p, prob],
                             feed_dict=test)
                         acc += _acc
                         cost += _loss * num
@@ -126,6 +126,10 @@ def main(_):
                             print 'macro R:', r
                             print 'macro F1:', 2 * p * r / (p + r)
                             print
+                        if step == 20:
+                            fp = open(FLAGS.prob_file, 'w')
+                            for pb in y_prob:
+                                fp.write(str(pb[0]) + ' ' + str(pb[1]) + '\n')
                     print 'all samples={}, correct prediction={}'.format(cnt, acc)
                     test_summary_writer.add_summary(summary, step)
                     saver.save(sess, save_dir, global_step=step)
