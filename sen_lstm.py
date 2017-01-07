@@ -71,7 +71,7 @@ def main(_):
         init = tf.initialize_all_variables()
         sess.run(init)
 
-        saver.restore(sess, save_dir + '/-100')
+        # saver.restore(sess, save_dir + '-100')
 
         tr_x, tr_sen_len, tr_y = load_inputs_sentence(
             FLAGS.train_file_path,
@@ -97,6 +97,7 @@ def main(_):
 
         max_acc = 0.
 
+        """
         acc, cost, cnt = 0., 0., 0
         y_prob = []
         y_pred = []
@@ -139,10 +140,9 @@ def main(_):
                                                 FLAGS.keep_prob1, FLAGS.keep_prob2):
                 _, step, summary = sess.run([optimizer, global_step, train_summary_op], feed_dict=train)
                 train_summary_writer.add_summary(summary, step)
-
-            saver.save(sess, save_dir, global_step=step)
-        """
-        """
+                if step % FLAGS.display_step == 0:
+                    saver.save(sess, save_dir, global_step=step)
+                """
                 if step % FLAGS.display_step == 0:
                     acc, cost, cnt = 0., 0., 0
                     flag = True
@@ -177,16 +177,15 @@ def main(_):
                     print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}\n'.format(step, cost / cnt, acc / cnt)
                     if acc / cnt > max_acc:
                         max_acc = acc / cnt
-                    if step == 100:
+                    if step == 2500:
                         fp = open(FLAGS.prob_file, 'w')
                         fp.write(str(p) + ' ' + str(r) + ' ' + str(r) + '\n')
                         for pb in y_prob:
                             fp.write(str(pb[0]) + ' ' + str(pb[1]) + '\n')
                         break
-        """
 
-        # print 'Optimization Finished! Max acc={}'.format(max_acc)
-
+        print 'Optimization Finished! Max acc={}'.format(max_acc)
+"""
         print 'Learning_rate={}, iter_num={}, batch_size={}, hidden_num={}, l2={}'.format(
             FLAGS.learning_rate,
             FLAGS.n_iter,
