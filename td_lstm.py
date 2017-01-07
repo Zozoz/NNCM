@@ -15,14 +15,14 @@ def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob
     batch_size = tf.shape(input_fw)[0]
     cell = tf.nn.rnn_cell.LSTMCell
     # forward
-    hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TD', type_)
+    hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TD-ATT-1', type_)
     ht_fw = tf.concat(2, [hidden_fw, target])
     alpha_fw = dot_produce_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
     r_fw = tf.reshape(tf.batch_matmul(alpha_fw, hidden_fw), [-1, FLAGS.n_hidden])
     # index = tf.range(0, batch_size) * FLAGS.max_sentence_len + (length - 1)
     # hn_fw = tf.gather(tf.reshape(hidden_fw, [-1, FLAGS.n_hidden]), index)  # batch_size * n_hidden
     # backward
-    hidden_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TD', type_)
+    hidden_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TD-ATT-2', type_)
     ht_bw = tf.concat(2, [hidden_bw, target])
     alpha_bw = dot_produce_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
     r_bw = tf.reshape(tf.batch_matmul(alpha_fw, hidden_fw), [-1, FLAGS.n_hidden])
@@ -68,8 +68,10 @@ def main(_):
     inputs_fw = tf.nn.embedding_lookup(word_embedding, x)
     inputs_bw = tf.nn.embedding_lookup(word_embedding, x_bw)
     target = tf.nn.embedding_lookup(word_embedding, target_words)
+    batch_size = tf.shape(inputs_bw)[0]
+    target = tf.zeros([batch_size, FLAGS.max_sentence_len, FLAGS.embedding_dim]) + target
 
-    prob = TD(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, FLAGS.t1)
+    prob = TD(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, 'all')
 
     loss = loss_func(y, prob)
     acc_num, acc_prob = acc_func(y, prob)
