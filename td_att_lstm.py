@@ -15,14 +15,14 @@ def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob
     batch_size = tf.shape(input_fw)[0]
     cell = tf.nn.rnn_cell.LSTMCell
     # forward
-    hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TD-ATT-1', type_)
+    hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
     ht_fw = tf.concat(2, [hidden_fw, target])
     alpha_fw = dot_produce_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
     r_fw = tf.reshape(tf.batch_matmul(alpha_fw, hidden_fw), [-1, FLAGS.n_hidden])
     # index = tf.range(0, batch_size) * FLAGS.max_sentence_len + (length - 1)
     # hn_fw = tf.gather(tf.reshape(hidden_fw, [-1, FLAGS.n_hidden]), index)  # batch_size * n_hidden
     # backward
-    hidden_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TD-ATT-2', type_)
+    hidden_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
     ht_bw = tf.concat(2, [hidden_bw, target])
     alpha_bw = dot_produce_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
     r_bw = tf.reshape(tf.batch_matmul(alpha_fw, hidden_fw), [-1, FLAGS.n_hidden])
@@ -30,7 +30,7 @@ def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob
     # hn = tf.gather(tf.reshape(hidden_bw, [-1, FLAGS.n_hidden]), index)  # batch_size * n_hidden
 
     output = tf.concat(1, [r_fw, r_bw])
-    return softmax_layer(output, FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+    return softmax_layer(output, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
 
 """
     Wp = tf.get_variable(
@@ -109,13 +109,13 @@ def main(_):
             FLAGS.train_file_path,
             word_id_mapping,
             FLAGS.max_sentence_len,
-            'TD'
+            'TC'
         )
         te_x, te_sen_len, te_x_bw, te_sen_len_bw, te_y, te_target_word = load_inputs_twitter(
             FLAGS.test_file_path,
             word_id_mapping,
             FLAGS.max_sentence_len,
-            'TD'
+            'TC'
         )
 
         def get_batch_data(x_f, sen_len_f, x_b, sen_len_b, yi, target, batch_size, kp1, kp2, is_shuffle=True):
