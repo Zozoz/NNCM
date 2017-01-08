@@ -18,9 +18,33 @@ def softmax_with_len(inputs, length, max_len):
     return inputs / _sum
 
 
+def bilinear_attention_layer(inputs, attend, length, n_hidden, l2_reg, random_base, layer_id=1):
+    """
+    :param inputs: batch * max_len * n_hidden
+    :param attend: batch * n_hidden
+    :param length:
+    :param n_hidden:
+    :param l2_reg:
+    :param random_base:
+    :param layer_id:
+    :return:
+    """
+    batch_size = tf.shape(inputs)[0]
+    max_len = tf.shape(inputs)[1]
+    w = tf.get_variable(
+        name='att_w_' + str(layer_id),
+        shape=[n_hidden, n_hidden],
+        initializer=tf.random_uniform_initializer(-random_base, random_base),
+        regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
+    )
+    M = tf.expand_dims(tf.matmul(attend, w), axis=2)
+    tmp = tf.reshape(tf.batch_matmul(inputs, M), [batch_size, 1, max_len])
+    return softmax_with_len(tmp, length, max_len)
+
+
 def dot_produce_attention_layer(inputs, length, n_hidden, l2_reg, random_base, layer_id=1):
     """
-    :param inputs: batch * max_len * embedding_dim
+    :param inputs: batch * max_len * n_hidden
     :param length: batch * 1
     :param n_hidden:
     :param l2_reg:
@@ -44,7 +68,7 @@ def dot_produce_attention_layer(inputs, length, n_hidden, l2_reg, random_base, l
 
 def mlp_attention_layer(inputs, length, n_hidden, l2_reg, random_base, layer_id=1):
     """
-    :param inputs: batch * max_len * embedding_dim
+    :param inputs: batch * max_len * n_hidden
     :param length: batch * 1
     :param n_hidden:
     :param l2_reg:

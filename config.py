@@ -36,6 +36,7 @@ tf.app.flags.DEFINE_string('aspect_id_file_path', 'data/restaurant/aspect_id_new
 tf.app.flags.DEFINE_string('method', 'AE', 'model type: AE, AT or AEAT')
 tf.app.flags.DEFINE_string('prob_file', 'prob1.txt', 'prob')
 tf.app.flags.DEFINE_string('saver_file', 'prob1.txt', 'prob')
+tf.app.flags.DEFINE_string('model_num', '100', 'prob')
 
 
 def loss_func(y, prob):

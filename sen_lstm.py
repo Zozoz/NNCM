@@ -71,7 +71,7 @@ def main(_):
         init = tf.initialize_all_variables()
         sess.run(init)
 
-        # saver.restore(sess, save_dir + '-100')
+        # saver.restore(sess, save_dir + '-' + FLAGS.model_num)
 
         tr_x, tr_sen_len, tr_y = load_inputs_sentence(
             FLAGS.train_file_path,
@@ -140,9 +140,8 @@ def main(_):
                                                 FLAGS.keep_prob1, FLAGS.keep_prob2):
                 _, step, summary = sess.run([optimizer, global_step, train_summary_op], feed_dict=train)
                 train_summary_writer.add_summary(summary, step)
-                if step % FLAGS.display_step == 0:
-                    saver.save(sess, save_dir, global_step=step)
-                """
+                # if step % FLAGS.display_step == 0:
+                #     saver.save(sess, save_dir, global_step=step)
                 if step % FLAGS.display_step == 0:
                     acc, cost, cnt = 0., 0., 0
                     flag = True
