@@ -11,7 +11,7 @@ from config import *
 from utils import load_w2v, batch_index, load_word_embedding, load_aspect2id, load_inputs_twitter
 
 
-def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
+def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
     batch_size = tf.shape(input_fw)[0]
     cell = tf.nn.rnn_cell.LSTMCell
     # forward
@@ -20,18 +20,32 @@ def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob
     # alpha_fw = dot_produce_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
     alpha_fw = bilinear_attention_layer(hidden_fw, target, sen_len_fw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
     r_fw = tf.reshape(tf.batch_matmul(alpha_fw, hidden_fw), [-1, FLAGS.n_hidden])
-    # index = tf.range(0, batch_size) * FLAGS.max_sentence_len + (length - 1)
-    # hn_fw = tf.gather(tf.reshape(hidden_fw, [-1, FLAGS.n_hidden]), index)  # batch_size * n_hidden
+
     # backward
     hidden_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
     # ht_bw = tf.concat(2, [hidden_bw, target])
     # alpha_bw = dot_produce_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
     alpha_bw = bilinear_attention_layer(hidden_bw, target, sen_len_bw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
     r_bw = tf.reshape(tf.batch_matmul(alpha_bw, hidden_fw), [-1, FLAGS.n_hidden])
-    # index = tf.range(0, batch_size) * FLAGS.max_sentence_len + (length - 1)
-    # hn = tf.gather(tf.reshape(hidden_bw, [-1, FLAGS.n_hidden]), index)  # batch_size * n_hidden
 
     output = tf.concat(1, [r_fw, r_bw])
+    return softmax_layer(output, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+
+
+def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
+    batch_size = tf.shape(input_fw)[0]
+    cell = tf.nn.rnn_cell.LSTMCell
+    # forward
+    hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
+    index = tf.range(0, batch_size) * FLAGS.max_sentence_len + (sen_len_fw - 1)
+    hn_fw = tf.gather(tf.reshape(hidden_fw, [-1, FLAGS.n_hidden]), index)  # batch_size * n_hidden
+
+    # backward
+    hidden_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
+    index = tf.range(0, batch_size) * FLAGS.max_sentence_len + (sen_len_bw - 1)
+    hn_bw = tf.gather(tf.reshape(hidden_bw, [-1, FLAGS.n_hidden]), index)  # batch_size * n_hidden
+
+    output = tf.concat(1, [hn_fw, hn_bw])
     return softmax_layer(output, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
 
 """
@@ -74,7 +88,10 @@ def main(_):
     # target = tf.zeros([batch_size, FLAGS.max_sentence_len, FLAGS.embedding_dim]) + target
     target = tf.squeeze(target)
 
-    prob = TD(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, 'all')
+    if FLAGS.method == 'TD-ATT':
+        prob = TD_att(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, 'all')
+    else:
+        prob = TD(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, 'all')
 
     loss = loss_func(y, prob)
     acc_num, acc_prob = acc_func(y, prob)

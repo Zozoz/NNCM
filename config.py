@@ -18,7 +18,7 @@ tf.app.flags.DEFINE_integer('max_doc_len', 20, 'max number of tokens per sentenc
 tf.app.flags.DEFINE_float('l2_reg', 0.001, 'l2 regularization')
 tf.app.flags.DEFINE_float('random_base', 0.01, 'initial random base')
 tf.app.flags.DEFINE_integer('display_step', 4, 'number of test display step')
-tf.app.flags.DEFINE_integer('n_iter', 20, 'number of train iter')
+tf.app.flags.DEFINE_integer('n_iter', 10, 'number of train iter')
 tf.app.flags.DEFINE_float('keep_prob1', 1.0, 'dropout keep prob')
 tf.app.flags.DEFINE_float('keep_prob2', 1.0, 'dropout keep prob')
 tf.app.flags.DEFINE_string('t1', 'last', 'type of hidden output')
