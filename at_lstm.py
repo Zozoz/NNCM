@@ -4,6 +4,7 @@
 # email: zhengshiliang0@gmail.com
 
 
+import numpy as np
 import tensorflow as tf
 from nn_layer import dynamic_rnn, softmax_layer
 from att_layer import dot_produce_attention_layer
@@ -44,13 +45,15 @@ def AT(inputs, target, length, keep_prob1, keep_prob2, type_='all'):
     Wp = tf.get_variable(
         name='Wp',
         shape=[FLAGS.n_hidden, FLAGS.n_hidden],
-        initializer=tf.random_uniform_initializer(-0.01, 0.01),
+        # initializer=tf.random_uniform_initializer(-0.01, 0.01),
+        initializer=tf.random_uniform_initializer(-np.sqrt(6.0 / (FLAGS.n_hidden * 2)), np.sqrt(6.0 / (FLAGS.n_hidden * 2))),
         regularizer=tf.contrib.layers.l2_regularizer(FLAGS.l2_reg)
     )
     Wx = tf.get_variable(
         name='Wx',
         shape=[FLAGS.n_hidden, FLAGS.n_hidden],
-        initializer=tf.random_uniform_initializer(-0.01, 0.01),
+        # initializer=tf.random_uniform_initializer(-0.01, 0.01),
+        initializer=tf.random_uniform_initializer(-np.sqrt(6.0 / (FLAGS.n_hidden * 2)), np.sqrt(6.0 / (FLAGS.n_hidden * 2))),
         regularizer=tf.contrib.layers.l2_regularizer(FLAGS.l2_reg)
     )
     h = tf.tanh(tf.matmul(r, Wp) + tf.matmul(hn, Wx))

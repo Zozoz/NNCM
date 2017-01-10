@@ -4,6 +4,7 @@
 # email: zhengshiliang0@gmail.com
 
 
+import numpy as np
 import tensorflow as tf
 
 
