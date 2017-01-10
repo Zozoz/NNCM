@@ -76,7 +76,7 @@ def summary_func(loss, acc, _dir, title, sess):
 
 
 def saver_func(_dir):
-    saver = tf.train.Saver(write_version=tf.train.SaverDef.V2)
+    saver = tf.train.Saver(write_version=tf.train.SaverDef.V2, max_to_keep=1000)
     import os
     if not os.path.exists(_dir):
         os.makedirs(_dir)

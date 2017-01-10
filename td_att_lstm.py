@@ -26,7 +26,7 @@ def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob
     hidden_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
     # ht_bw = tf.concat(2, [hidden_bw, target])
     # alpha_bw = dot_produce_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
-    alpha_bw = bilinear_attention_layer(hidden_bw, target, sen_len_bw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+    alpha_bw = bilinear_attention_layer(hidden_bw, target, sen_len_bw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
     r_bw = tf.reshape(tf.batch_matmul(alpha_bw, hidden_fw), [-1, FLAGS.n_hidden])
     # index = tf.range(0, batch_size) * FLAGS.max_sentence_len + (length - 1)
     # hn = tf.gather(tf.reshape(hidden_bw, [-1, FLAGS.n_hidden]), index)  # batch_size * n_hidden

@@ -109,7 +109,8 @@ def softmax_layer(inputs, n_hidden, random_base, keep_prob, l2_reg, n_class):
     w = tf.get_variable(
         name='softmax_w',
         shape=[n_hidden, n_class],
-        initializer=tf.random_uniform_initializer(-random_base, random_base),
+        # initializer=tf.random_uniform_initializer(-random_base, random_base),
+        initializer=tf.random_uniform_initializer(-np.sqrt(6.0 / (n_hidden + n_class)), np.sqrt(6.0 / (n_hidden + n_class))),
         regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
     )
     b = tf.get_variable(
