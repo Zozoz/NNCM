@@ -118,8 +118,17 @@ def load_inputs_twitter(input_file, word_id_file, sentence_len, type_='', encodi
     lines = open(input_file).readlines()
     for i in xrange(0, len(lines), 3):
         target_word = lines[i + 1].decode(encoding).lower().split()
-        target_word = map(lambda w: word_to_id.get(w, 0), target_word)
-        target_words.append([target_word[0]])
+        # target_word = map(lambda w: word_to_id.get(w, 0), target_word)
+        # target_words.append([target_word[0]])
+
+        tmp = None
+        for w in target_word:
+            if w in word_to_id:
+                tmp = [word_to_id[w]]
+        if tmp:
+            target_words.append(tmp)
+        else:
+            target_words.append([0])
 
         y.append(lines[i + 2].strip().split()[0])
 
