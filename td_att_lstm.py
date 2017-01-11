@@ -101,6 +101,8 @@ def main(_):
 
     if FLAGS.method == 'TD-ATT':
         prob = TD_att(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, 'all')
+    elif FLAGS.method == 'TD-BI':
+        prob = TD_bi(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, FLAGS.t1)
     else:
         prob = TD(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, FLAGS.t1)
 
