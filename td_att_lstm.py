@@ -5,7 +5,7 @@
 
 
 import tensorflow as tf
-from nn_layer import dynamic_rnn, softmax_layer
+from nn_layer import dynamic_rnn, softmax_layer, bi_dynamic_rnn
 from att_layer import dot_produce_attention_layer, bilinear_attention_layer
 from config import *
 from utils import load_w2v, batch_index, load_word_embedding, load_aspect2id, load_inputs_twitter
@@ -38,18 +38,27 @@ def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob
     batch_size = tf.shape(input_fw)[0]
     cell = tf.nn.rnn_cell.LSTMCell
     # forward
-    hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
-    index = tf.range(0, batch_size) * FLAGS.max_sentence_len + (sen_len_fw - 1)
-    hn_fw = tf.gather(tf.reshape(hidden_fw, [-1, FLAGS.n_hidden]), index)  # batch_size * n_hidden
+    hn_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
 
     # backward
-    hidden_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
-    index = tf.range(0, batch_size) * FLAGS.max_sentence_len + (sen_len_bw - 1)
-    hn_bw = tf.gather(tf.reshape(hidden_bw, [-1, FLAGS.n_hidden]), index)  # batch_size * n_hidden
+    hn_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
 
     output = tf.concat(1, [hn_fw, hn_bw])
     return softmax_layer(output, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
 
+
+def TD_bi(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
+    print 'I am TD.'
+    batch_size = tf.shape(input_fw)[0]
+    cell = tf.nn.rnn_cell.LSTMCell
+    # forward
+    hn_fw = bi_dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
+
+    # backward
+    hn_bw = bi_dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
+
+    output = tf.concat(1, [hn_fw, hn_bw])
+    return softmax_layer(output, 4 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
 """
     Wp = tf.get_variable(
         name='Wp',
@@ -93,7 +102,7 @@ def main(_):
     if FLAGS.method == 'TD-ATT':
         prob = TD_att(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, 'all')
     else:
-        prob = TD(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, 'all')
+        prob = TD(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, FLAGS.t1)
 
     loss = loss_func(y, prob)
     acc_num, acc_prob = acc_func(y, prob)
