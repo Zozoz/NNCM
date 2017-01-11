@@ -6,19 +6,19 @@
 
 import tensorflow as tf
 from nn_layer import dynamic_rnn, softmax_layer, bi_dynamic_rnn
-from att_layer import dot_produce_attention_layer, bilinear_attention_layer
+from att_layer import dot_produce_attention_layer, bilinear_attention_layer, mlp_attention_layer
 from config import *
 from utils import load_w2v, batch_index, load_word_embedding, load_aspect2id, load_inputs_twitter
 
 
 def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
     print 'I am TD-ATT.'
-    batch_size = tf.shape(input_fw)[0]
     cell = tf.nn.rnn_cell.LSTMCell
     # forward
     hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
     # ht_fw = tf.concat(2, [hidden_fw, target])
     # alpha_fw = dot_produce_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+    # alpha_fw = mlp_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
     alpha_fw = bilinear_attention_layer(hidden_fw, target, sen_len_fw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
     r_fw = tf.reshape(tf.batch_matmul(alpha_fw, hidden_fw), [-1, FLAGS.n_hidden])
 
@@ -26,6 +26,7 @@ def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_
     hidden_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
     # ht_bw = tf.concat(2, [hidden_bw, target])
     # alpha_bw = dot_produce_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
+    # alpha_bw = mlp_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
     alpha_bw = bilinear_attention_layer(hidden_bw, target, sen_len_bw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
     r_bw = tf.reshape(tf.batch_matmul(alpha_bw, hidden_fw), [-1, FLAGS.n_hidden])
 
@@ -35,7 +36,6 @@ def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_
 
 def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
     print 'I am TD.'
-    batch_size = tf.shape(input_fw)[0]
     cell = tf.nn.rnn_cell.LSTMCell
     # forward
     hn_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
@@ -48,8 +48,7 @@ def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob
 
 
 def TD_bi(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
-    print 'I am TD.'
-    batch_size = tf.shape(input_fw)[0]
+    print 'I am TD-BI.'
     cell = tf.nn.rnn_cell.LSTMCell
     # forward
     hn_fw = bi_dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
@@ -59,21 +58,7 @@ def TD_bi(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_p
 
     output = tf.concat(1, [hn_fw, hn_bw])
     return softmax_layer(output, 4 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
-"""
-    Wp = tf.get_variable(
-        name='Wp',
-        shape=[FLAGS.n_hidden, FLAGS.n_hidden],
-        initializer=tf.random_uniform_initializer(-0.01, 0.01),
-        regularizer=tf.contrib.layers.l2_regularizer(FLAGS.l2_reg)
-    )
-    Wx = tf.get_variable(
-        name='Wx',
-        shape=[FLAGS.n_hidden, FLAGS.n_hidden],
-        initializer=tf.random_uniform_initializer(-0.01, 0.01),
-        regularizer=tf.contrib.layers.l2_regularizer(FLAGS.l2_reg)
-    )
-    h = tf.tanh(tf.matmul(r, Wp) + tf.matmul(hn, Wx))
-"""
+
 
 def main(_):
     word_id_mapping, w2v = load_w2v(FLAGS.embedding_file_path, FLAGS.embedding_dim)
