@@ -68,7 +68,8 @@ def TD_bi(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_p
 
 def main(_):
     word_id_mapping, w2v = load_w2v(FLAGS.embedding_file_path, FLAGS.embedding_dim)
-    word_embedding = tf.constant(w2v, name='word_embedding')
+    # word_embedding = tf.constant(w2v, name='word_embedding')
+    word_embedding = tf.Variable(w2v, name='word_embedding')
 
     keep_prob1 = tf.placeholder(tf.float32)
     keep_prob2 = tf.placeholder(tf.float32)
@@ -162,6 +163,8 @@ def main(_):
                                                 FLAGS.keep_prob1, FLAGS.keep_prob2):
                 _, step, summary = sess.run([optimizer, global_step, train_summary_op], feed_dict=train)
                 train_summary_writer.add_summary(summary, step)
+                embed_update = tf.assign(word_embedding, tf.concat(0, [tf.zeros([1, FLAGS.embedding_dim]), word_embedding[1:]]))
+                sess.run(embed_update)
 
             acc, cost, cnt = 0., 0., 0
             flag = True
