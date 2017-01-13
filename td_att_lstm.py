@@ -14,6 +14,8 @@ from utils import load_w2v, batch_index, load_word_embedding, load_aspect2id, lo
 def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
     print 'I am TD-ATT.'
     cell = tf.nn.rnn_cell.LSTMCell
+    input_fw = tf.nn.dropout(input_fw, keep_prob=keep_prob1)
+    input_bw = tf.nn.dropout(input_bw, keep_prob=keep_prob1)
     # forward
     hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
     # ht_fw = tf.concat(2, [hidden_fw, target])
@@ -28,7 +30,7 @@ def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_
     # alpha_bw = dot_produce_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
     # alpha_bw = mlp_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
     alpha_bw = bilinear_attention_layer(hidden_bw, target, sen_len_bw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
-    r_bw = tf.reshape(tf.batch_matmul(alpha_bw, hidden_fw), [-1, FLAGS.n_hidden])
+    r_bw = tf.reshape(tf.batch_matmul(alpha_bw, hidden_bw), [-1, FLAGS.n_hidden])
 
     output = tf.concat(1, [r_fw, r_bw])
     return softmax_layer(output, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
@@ -37,6 +39,8 @@ def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_
 def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
     print 'I am TD.'
     cell = tf.nn.rnn_cell.LSTMCell
+    input_fw = tf.nn.dropout(input_fw, keep_prob=keep_prob1)
+    input_bw = tf.nn.dropout(input_bw, keep_prob=keep_prob1)
     # forward
     hn_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
 
@@ -50,6 +54,8 @@ def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob
 def TD_bi(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
     print 'I am TD-BI.'
     cell = tf.nn.rnn_cell.LSTMCell
+    input_fw = tf.nn.dropout(input_fw, keep_prob=keep_prob1)
+    input_bw = tf.nn.dropout(input_bw, keep_prob=keep_prob1)
     # forward
     hn_fw = bi_dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
 
