@@ -30,7 +30,7 @@ Conference on Empirical Methods in Natural Language Processing (EMNLP 2016, full
 
 
 ## source code tree
-'''
+
     .
     ├── README.md
     ├── data
@@ -47,4 +47,3 @@ Conference on Empirical Methods in Natural Language Processing (EMNLP 2016, full
         ├── att_layer.py
         ├── config.py
         └── nn_layer.py
-'''
