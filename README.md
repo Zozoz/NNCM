@@ -30,20 +30,21 @@ Conference on Empirical Methods in Natural Language Processing (EMNLP 2016, full
 
 
 ## source code tree
-.
-├── README.md
-├── data
-├── data_prepare
-│   ├── __init__.py
-│   └── utils.py
-├── model
-│   ├── __init__.py
-│   ├── at_lstm.py
-│   ├── sen_lstm.py
-│   └── td_att_lstm.py
-└── newbie_nn
-    ├── __init__.py
-    ├── att_layer.py
-    ├── config.py
-    └── nn_layer.py
-
+'''
+    .
+    ├── README.md
+    ├── data
+    ├── data_prepare
+    │   ├── __init__.py
+    │   └── utils.py
+    ├── model
+    │   ├── __init__.py
+    │   ├── at_lstm.py
+    │   ├── sen_lstm.py
+    │   └── td_att_lstm.py
+    └── newbie_nn
+        ├── __init__.py
+        ├── att_layer.py
+        ├── config.py
+        └── nn_layer.py
+'''
