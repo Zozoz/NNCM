@@ -7,10 +7,10 @@
 from sklearn.metrics import precision_score, recall_score, f1_score
 import numpy as np
 import tensorflow as tf
-from nn_layer import bi_dynamic_rnn, softmax_layer
-from att_layer import dot_produce_attention_layer
-from config import *
-from utils import load_w2v, batch_index, load_inputs_sentence
+from newbie_nn.nn_layer import bi_dynamic_rnn, softmax_layer
+from newbie_nn.att_layer import dot_produce_attention_layer
+from newbie_nn.config import *
+from data_prepare.utils import load_w2v, batch_index, load_inputs_sentence
 
 
 def bilstm(inputs, length, keep_prob1, keep_prob2, type_='last'):
@@ -130,7 +130,7 @@ def main(_):
             # if not os.path.exists(prob_dir):
             #     os.makedirs(prob_dir)
             # fp = open(prob_dir + FLAGS.prob_file, 'w')
-            # fp.write(str(p) + ' ' + str(r) + ' ' + str(r) + '\n')
+            # fp.write(str(p) + ' ' + str(r) + ' ' + str(2 * p * r / (p + r)) + '\n')
             # for pb in y_prob:
             #     fp.write(str(pb[0]) + ' ' + str(pb[1]) + '\n')
 

@@ -84,15 +84,15 @@ def mlp_attention_layer(inputs, length, n_hidden, l2_reg, random_base, layer_id=
     w = tf.get_variable(
         name='att_w_' + str(layer_id),
         shape=[n_hidden, n_hidden],
-        # initializer=tf.random_uniform_initializer(-random_base, random_base),
-        initializer=tf.random_uniform_initializer(-np.sqrt(6.0 / (n_hidden + n_hidden)), np.sqrt(6.0 / (n_hidden + n_hidden))),
+        initializer=tf.random_uniform_initializer(-random_base, random_base),
+        # initializer=tf.random_uniform_initializer(-np.sqrt(6.0 / (n_hidden + n_hidden)), np.sqrt(6.0 / (n_hidden + n_hidden))),
         regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
     )
     u = tf.get_variable(
         name='att_u_' + str(layer_id),
         shape=[n_hidden, 1],
-        # initializer=tf.random_uniform_initializer(-random_base, random_base),
-        initializer=tf.random_uniform_initializer(-np.sqrt(6.0 / (n_hidden + 1)), np.sqrt(6.0 / (n_hidden + 1))),
+        initializer=tf.random_uniform_initializer(-random_base, random_base),
+        # initializer=tf.random_uniform_initializer(-np.sqrt(6.0 / (n_hidden + 1)), np.sqrt(6.0 / (n_hidden + 1))),
         regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
     )
     inputs = tf.reshape(inputs, [-1, n_hidden])

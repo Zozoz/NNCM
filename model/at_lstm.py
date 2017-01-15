@@ -6,10 +6,10 @@
 
 import numpy as np
 import tensorflow as tf
-from nn_layer import dynamic_rnn, softmax_layer
-from att_layer import dot_produce_attention_layer
-from config import *
-from utils import load_w2v, batch_index, load_word_embedding, load_aspect2id, load_inputs_twitter_at
+from newbie_nn.nn_layer import dynamic_rnn, softmax_layer
+from newbie_nn.att_layer import dot_produce_attention_layer
+from newbie_nn.config import *
+from data_prepare.utils import load_w2v, batch_index, load_word_embedding, load_aspect2id, load_inputs_twitter_at
 
 
 def AE(inputs, target, length, keep_prob1, keep_prob2, type_='last'):
