@@ -4,6 +4,9 @@
 # email: zhengshiliang0@gmail.com
 
 
+import os, sys
+sys.path.append(os.path.abspath(__file__))
+
 import numpy as np
 import tensorflow as tf
 
