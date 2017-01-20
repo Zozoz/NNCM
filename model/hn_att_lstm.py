@@ -5,7 +5,7 @@
 
 
 import os, sys
-sys.path.append(os.path.abspath(__file__))
+sys.path.append(os.getcwd())
 
 import numpy as np
 import tensorflow as tf
@@ -84,22 +84,22 @@ def main(_):
 
         tr_x, tr_y, tr_sen_len, tr_doc_len = load_inputs_document(
             FLAGS.train_file_path,
-            FLAGS.word_id_mapping,
+            word_id_mapping,
             FLAGS.max_sentence_len,
             FLAGS.max_doc_len
         )
         te_x, te_y, te_sen_len, te_doc_len = load_inputs_document(
             FLAGS.test_file_path,
-            FLAGS.word_id_mapping,
+            word_id_mapping,
             FLAGS.max_sentence_len,
             FLAGS.max_doc_len
         )
-        v_x, v_y, v_sen_len, v_doc_len = load_inputs_document(
-            FLAGS.validate_file_path,
-            FLAGS.word_id_mapping,
-            FLAGS.max_sentence_len,
-            FLAGS.max_doc_len
-        )
+        # v_x, v_y, v_sen_len, v_doc_len = load_inputs_document(
+        #     FLAGS.validate_file_path,
+        #     word_id_mapping,
+        #     FLAGS.max_sentence_len,
+        #     FLAGS.max_doc_len
+        # )
 
         def get_batch_data(x_in, y_in, sen_len_in, doc_len_in, batch_size, kp1, kp2, is_shuffle=True):
             for index in batch_index(len(y_in), batch_size, 1, is_shuffle):
