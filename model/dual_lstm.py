@@ -61,13 +61,10 @@ def main(_):
     with tf.device('/gpu:0'):
         inputs_o = tf.nn.embedding_lookup(word_embedding, x_o)
         inputs_o = tf.reshape(inputs_o, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
+        h_o = hn(inputs_o, sen_len_o, doc_len_o, keep_prob1, keep_prob2, 1)
     with tf.device('/gpu:1'):
         inputs_r = tf.nn.embedding_lookup(word_embedding, x_r)
         inputs_r = tf.reshape(inputs_r, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
-
-    with tf.device('/gpu:0'):
-        h_o = hn(inputs_o, sen_len_o, doc_len_o, keep_prob1, keep_prob2, 1)
-    with tf.device('/gpu:1'):
         h_r = hn(inputs_r, sen_len_r, doc_len_r, keep_prob1, keep_prob2, 2)
     h = tf.concat(2, [h_o, h_r])
     prob = softmax_layer(h, 4 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
