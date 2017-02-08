@@ -50,7 +50,7 @@ def hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2, id_=1):
         }
     with tf.name_scope('softmax'):
         outputs = tf.nn.dropout(hidden_doc, keep_prob=keep_prob2)
-        predict = tf.matmul(outputs, weights) + biases
+        predict = tf.matmul(outputs, weights['softmax']) + biases['softmax']
         predict = tf.nn.softmax(predict)
     return predict
     # return softmax_layer(hidden_doc, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
@@ -66,15 +66,15 @@ def main(_):
 
     with tf.name_scope('inputs'):
         x = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
-        y = tf.placeholder(tf.int32, [None, FLAGS.n_class])
+        y = tf.placeholder(tf.float32, [None, FLAGS.n_class])
         sen_len = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
         doc_len = tf.placeholder(tf.int32, None)
 
     inputs = tf.nn.embedding_lookup(word_embedding, x)
     inputs = tf.reshape(inputs, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
 
-    prob = hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2)
-    # prob = hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2)
+    # prob = hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2)
+    prob = hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2)
 
     loss = loss_func(y, prob)
     acc_num, acc_prob = acc_func(y, prob)
@@ -100,7 +100,7 @@ def main(_):
         train_summary_op, test_summary_op, validate_summary_op, \
         train_summary_writer, test_summary_writer, validate_summary_writer = summary_func(loss, acc_prob, _dir, title, sess)
 
-        save_dir = 'model/' + str(timestamp) + '_' + title + '/'
+        save_dir = 'temp_model/' + str(timestamp) + '_' + title + '/'
         saver = saver_func(save_dir)
 
         init = tf.initialize_all_variables()
