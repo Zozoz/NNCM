@@ -41,7 +41,8 @@ def load_w2v(w2v_file, embedding_dim, is_skip=False):
     cnt = 0
     for line in fp:
         cnt += 1
-        line = line.decode('utf8').split()
+        # line = line.decode('utf8').split()
+        line = line.split()
         if len(line) != embedding_dim + 1:
             print u'a bad word embedding: {}'.format(line[0])
             continue

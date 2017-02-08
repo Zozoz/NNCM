@@ -43,9 +43,9 @@ tf.app.flags.DEFINE_string('model_num', '100', 'prob')
 
 
 def loss_func(y, prob):
-    reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+    # reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
     # loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(prob, self.y))
-    loss = - tf.reduce_mean(tf.cast(y, tf.float32) * tf.log(prob)) + sum(reg_loss)
+    loss = - tf.reduce_mean(tf.cast(y, tf.float32) * tf.log(prob)) # + sum(reg_loss)
     return loss
 
 

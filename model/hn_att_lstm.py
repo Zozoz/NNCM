@@ -39,7 +39,21 @@ def hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2, id_=1):
     hiddens_sen = tf.reshape(hiddens_sen, [-1, FLAGS.max_doc_len, 2 * FLAGS.n_hidden])
     hidden_doc = bi_dynamic_rnn(cell, hiddens_sen, FLAGS.n_hidden, doc_len, FLAGS.max_doc_len, 'doc' + str(id_), FLAGS.t2)
 
-    return softmax_layer(hidden_doc, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+    with tf.name_scope('weights'):
+        weights = {
+            'softmax': tf.Variable(tf.random_uniform([2 * FLAGS.n_hidden, FLAGS.n_class], -0.01, 0.01)),
+        }
+
+    with tf.name_scope('biases'):
+        biases = {
+            'softmax': tf.Variable(tf.random_uniform([FLAGS.n_class], -0.01, 0.01)),
+        }
+    with tf.name_scope('softmax'):
+        outputs = tf.nn.dropout(hidden_doc, keep_prob=keep_prob2)
+        predict = tf.matmul(outputs, weights) + biases
+        predict = tf.nn.softmax(predict)
+    return predict
+    # return softmax_layer(hidden_doc, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
 
 
 def main(_):
