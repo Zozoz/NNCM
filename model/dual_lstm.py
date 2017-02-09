@@ -43,7 +43,7 @@ def hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2, id_=1):
 
 def main(_):
     word_id_mapping, w2v = load_w2v(FLAGS.embedding_file_path, FLAGS.embedding_dim, True)
-    word_embedding = tf.constant(w2v, name='word_embedding')
+    word_embedding = tf.constant(w2v, dtype=tf.float32, name='word_embedding')
     # word_embedding = tf.Variable(w2v, name='word_embedding')
 
     keep_prob1 = tf.placeholder(tf.float32)
