@@ -31,7 +31,7 @@ def hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
     return softmax_layer(outputs_doc, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
 
 
-def hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2, id_=1):
+def hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2, weights, biases, id_=1):
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
     cell = tf.nn.rnn_cell.LSTMCell
     sen_len = tf.reshape(sen_len, [-1])
@@ -39,15 +39,6 @@ def hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2, id_=1):
     hiddens_sen = tf.reshape(hiddens_sen, [-1, FLAGS.max_doc_len, 2 * FLAGS.n_hidden])
     hidden_doc = bi_dynamic_rnn(cell, hiddens_sen, FLAGS.n_hidden, doc_len, FLAGS.max_doc_len, 'doc' + str(id_), FLAGS.t2)
 
-    with tf.name_scope('weights'):
-        weights = {
-            'softmax': tf.Variable(tf.random_uniform([2 * FLAGS.n_hidden, FLAGS.n_class], -0.01, 0.01)),
-        }
-
-    with tf.name_scope('biases'):
-        biases = {
-            'softmax': tf.Variable(tf.random_uniform([FLAGS.n_class], -0.01, 0.01)),
-        }
     with tf.name_scope('softmax'):
         outputs = tf.nn.dropout(hidden_doc, keep_prob=keep_prob2)
         predict = tf.matmul(outputs, weights['softmax']) + biases['softmax']
@@ -58,7 +49,7 @@ def hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2, id_=1):
 
 def main(_):
     word_id_mapping, w2v = load_w2v(FLAGS.embedding_file_path, FLAGS.embedding_dim, True)
-    word_embedding = tf.constant(w2v, name='word_embedding')
+    word_embedding = tf.constant(w2v, dtype=tf.float32, name='word_embedding')
     # word_embedding = tf.Variable(w2v, name='word_embedding')
 
     keep_prob1 = tf.placeholder(tf.float32)
@@ -73,8 +64,18 @@ def main(_):
     inputs = tf.nn.embedding_lookup(word_embedding, x)
     inputs = tf.reshape(inputs, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
 
+    with tf.name_scope('weights'):
+        weights = {
+            'softmax': tf.Variable(tf.random_uniform([2 * FLAGS.n_hidden, FLAGS.n_class], -0.01, 0.01)),
+        }
+
+    with tf.name_scope('biases'):
+        biases = {
+            'softmax': tf.Variable(tf.random_uniform([FLAGS.n_class], -0.01, 0.01)),
+        }
+
     # prob = hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2)
-    prob = hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2)
+    prob = hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2, weights, biases)
 
     loss = loss_func(y, prob)
     acc_num, acc_prob = acc_func(y, prob)
