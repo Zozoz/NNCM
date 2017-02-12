@@ -16,6 +16,8 @@ from newbie_nn.att_layer import mlp_attention_layer
 from data_prepare.utils import load_w2v, batch_index, load_word_embedding, load_inputs_document
 
 tf.app.flags.DEFINE_float('alpha', 0.6, 'learning rate')
+tf.app.flags.DEFINE_string('embedding_file_path_o', '', 'embedding file path')
+tf.app.flags.DEFINE_string('embedding_file_path_r', '', 'embedding file path')
 
 
 def hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
@@ -75,9 +77,9 @@ def dual_method_1():
 
 
 def dual_method_2():
-    _, w2v_o = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
+    word_id_mapping_o, w2v_o = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
     word_embedding_o = tf.constant(w2v_o, dtype=tf.float32)
-    _, w2v_r = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
+    word_id_mapping_r, w2v_r = load_w2v(FLAGS.embedding_file_path_r, FLAGS.embedding_dim, True)
     word_embedding_r = tf.constant(w2v_r, dtype=tf.float32)
 
     with tf.name_scope('inputs'):
@@ -110,9 +112,9 @@ def dual_method_2():
 
 
 def main(_):
-    _, w2v_o = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
+    word_id_mapping_o, w2v_o = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
     word_embedding_o = tf.constant(w2v_o, dtype=tf.float32)
-    _, w2v_r = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
+    word_id_mapping_r, w2v_r = load_w2v(FLAGS.embedding_file_path_r, FLAGS.embedding_dim, True)
     word_embedding_r = tf.constant(w2v_r, dtype=tf.float32)
 
     with tf.name_scope('inputs'):
@@ -175,25 +177,25 @@ def main(_):
 
         tr_x, tr_y, tr_sen_len, tr_doc_len = load_inputs_document(
             FLAGS.train_file_path,
-            word_id_mapping,
+            word_id_mapping_o,
             FLAGS.max_sentence_len,
             FLAGS.max_doc_len
         )
         te_x, te_y, te_sen_len, te_doc_len = load_inputs_document(
             FLAGS.test_file_path,
-            word_id_mapping,
+            word_id_mapping_o,
             FLAGS.max_sentence_len,
             FLAGS.max_doc_len
         )
         tr_x_r, tr_y_r, tr_sen_len_r, tr_doc_len_r = load_inputs_document(
             FLAGS.train_file_path_r,
-            word_id_mapping,
+            word_id_mapping_r,
             FLAGS.max_sentence_len,
             FLAGS.max_doc_len
         )
         te_x_r, te_y_r, te_sen_len_r, te_doc_len_r = load_inputs_document(
             FLAGS.test_file_path_r,
-            word_id_mapping,
+            word_id_mapping_r,
             FLAGS.max_sentence_len,
             FLAGS.max_doc_len
         )
