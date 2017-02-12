@@ -55,7 +55,7 @@ def dual_method_1():
 
     with tf.name_scope('inputs'):
         x_o = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
-        x_r = tf.placeholder(tf.float32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
+        x_r = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
         y = tf.placeholder(tf.int32, [None, FLAGS.n_class])
         sen_len_o = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
         sen_len_r = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
@@ -86,7 +86,7 @@ def dual_method_2():
         keep_prob1 = tf.placeholder(tf.float32)
         keep_prob2 = tf.placeholder(tf.float32)
         x_o = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
-        x_r = tf.placeholder(tf.float32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
+        x_r = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
         sen_len_o = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
         sen_len_r = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
         doc_len_o = tf.placeholder(tf.int32, None)
@@ -121,7 +121,7 @@ def main(_):
         keep_prob1 = tf.placeholder(tf.float32)
         keep_prob2 = tf.placeholder(tf.float32)
         x_o = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
-        x_r = tf.placeholder(tf.float32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
+        x_r = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
         sen_len_o = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
         sen_len_r = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
         doc_len_o = tf.placeholder(tf.int32, None)
@@ -132,12 +132,12 @@ def main(_):
         inputs_o = tf.nn.embedding_lookup(word_embedding_o, x_o)
         inputs_o = tf.reshape(inputs_o, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
         h_o = hn(inputs_o, sen_len_o, doc_len_o, keep_prob1, keep_prob2, 1)
-        prob_o = softmax_layer(h_o, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+        prob_o = softmax_layer(h_o, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, 'o')
     with tf.device('/gpu:1'):
         inputs_r = tf.nn.embedding_lookup(word_embedding_r, x_r)
         inputs_r = tf.reshape(inputs_r, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
         h_r = hn(inputs_r, sen_len_r, doc_len_r, keep_prob1, keep_prob2, 2)
-        prob_r = softmax_layer(h_r, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+        prob_r = softmax_layer(h_r, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, 'r')
 
     reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
     loss = - tf.reduce_mean(y * tf.log(prob_o)) - tf.reduce_mean((1.0 - y) * tf.log(prob_r)) + sum(reg_loss)
