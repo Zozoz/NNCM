@@ -15,6 +15,8 @@ from newbie_nn.nn_layer import dynamic_rnn, bi_dynamic_rnn, softmax_layer
 from newbie_nn.att_layer import mlp_attention_layer
 from data_prepare.utils import load_w2v, batch_index, load_word_embedding, load_inputs_document
 
+tf.app.flags.DEFINE_float('alpha', 0.6, 'learning rate')
+
 
 def hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
@@ -41,7 +43,7 @@ def hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2, id_=1):
     return hidden_doc
 
 
-def main(_):
+def dual_method_1():
     word_id_mapping, w2v = load_w2v(FLAGS.embedding_file_path, FLAGS.embedding_dim, True)
     word_embedding = tf.constant(w2v, dtype=tf.float32, name='word_embedding')
     # word_embedding = tf.Variable(w2v, name='word_embedding')
@@ -51,7 +53,7 @@ def main(_):
 
     with tf.name_scope('inputs'):
         x_o = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
-        x_r = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
+        x_r = tf.placeholder(tf.float32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
         y = tf.placeholder(tf.int32, [None, FLAGS.n_class])
         sen_len_o = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
         sen_len_r = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
@@ -68,8 +70,77 @@ def main(_):
         h_r = hn(inputs_r, sen_len_r, doc_len_r, keep_prob1, keep_prob2, 2)
     h = tf.concat(1, [h_o, h_r])
     prob = softmax_layer(h, 4 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
-
     loss = loss_func(y, prob)
+    return prob
+
+
+def dual_method_2():
+    _, w2v_o = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
+    word_embedding_o = tf.constant(w2v_o, dtype=tf.float32)
+    _, w2v_r = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
+    word_embedding_r = tf.constant(w2v_r, dtype=tf.float32)
+
+    with tf.name_scope('inputs'):
+        keep_prob1 = tf.placeholder(tf.float32)
+        keep_prob2 = tf.placeholder(tf.float32)
+        x_o = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
+        x_r = tf.placeholder(tf.float32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
+        sen_len_o = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
+        sen_len_r = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
+        doc_len_o = tf.placeholder(tf.int32, None)
+        doc_len_r = tf.placeholder(tf.int32, None)
+        y = tf.placeholder(tf.int32, [None, FLAGS.n_class])
+
+    with tf.device('/gpu:0'):
+        inputs_o = tf.nn.embedding_lookup(word_embedding_o, x_o)
+        inputs_o = tf.reshape(inputs_o, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
+        h_o = hn(inputs_o, sen_len_o, doc_len_o, keep_prob1, keep_prob2, 1)
+        prob_o = softmax_layer(h_o, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+    with tf.device('/gpu:1'):
+        inputs_r = tf.nn.embedding_lookup(word_embedding_r, x_r)
+        inputs_r = tf.reshape(inputs_r, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
+        h_r = hn(inputs_r, sen_len_r, doc_len_r, keep_prob1, keep_prob2, 2)
+        prob_r = softmax_layer(h_r, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+
+    reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+    loss = - tf.reduce_mean(y * tf.log(prob_o)) - tf.reduce_mean((1.0 - y) * tf.log(prob_r)) + sum(reg_loss)
+
+    prob = FLAGS.alpha * prob_o + (1.0 - FLAGS.alpha) * prob_r
+    return prob
+
+
+def main(_):
+    _, w2v_o = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
+    word_embedding_o = tf.constant(w2v_o, dtype=tf.float32)
+    _, w2v_r = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
+    word_embedding_r = tf.constant(w2v_r, dtype=tf.float32)
+
+    with tf.name_scope('inputs'):
+        keep_prob1 = tf.placeholder(tf.float32)
+        keep_prob2 = tf.placeholder(tf.float32)
+        x_o = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
+        x_r = tf.placeholder(tf.float32, [None, FLAGS.max_doc_len, FLAGS.max_sentence_len])
+        sen_len_o = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
+        sen_len_r = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
+        doc_len_o = tf.placeholder(tf.int32, None)
+        doc_len_r = tf.placeholder(tf.int32, None)
+        y = tf.placeholder(tf.int32, [None, FLAGS.n_class])
+
+    with tf.device('/gpu:0'):
+        inputs_o = tf.nn.embedding_lookup(word_embedding_o, x_o)
+        inputs_o = tf.reshape(inputs_o, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
+        h_o = hn(inputs_o, sen_len_o, doc_len_o, keep_prob1, keep_prob2, 1)
+        prob_o = softmax_layer(h_o, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+    with tf.device('/gpu:1'):
+        inputs_r = tf.nn.embedding_lookup(word_embedding_r, x_r)
+        inputs_r = tf.reshape(inputs_r, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
+        h_r = hn(inputs_r, sen_len_r, doc_len_r, keep_prob1, keep_prob2, 2)
+        prob_r = softmax_layer(h_r, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+
+    reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+    loss = - tf.reduce_mean(y * tf.log(prob_o)) - tf.reduce_mean((1.0 - y) * tf.log(prob_r)) + sum(reg_loss)
+    prob = prob_o * FLAGS.alpha + (1.0 - FLAGS.alpha) * prob_r
+
     acc_num, acc_prob = acc_func(y, prob)
     global_step = tf.Variable(0, name='tr_global_step', trainable=False)
     optimizer = train_func(loss, FLAGS.learning_rate, global_step)
