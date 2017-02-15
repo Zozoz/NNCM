@@ -126,6 +126,7 @@ def main(_):
                 yield feed_dict, len(index)
 
         max_acc = 0.
+        max_prob = None
         for i in xrange(FLAGS.n_iter):
             for train, _ in get_batch_data(tr_x, tr_y, tr_sen_len, tr_doc_len, FLAGS.batch_size,
                                                 FLAGS.keep_prob1, FLAGS.keep_prob2):
@@ -136,11 +137,13 @@ def main(_):
 
             acc, cost, cnt = 0., 0., 0
             flag = True
+            p = []
             summary, step = None, None
             for test, num in get_batch_data(te_x, te_y, te_sen_len, te_doc_len, 2000, 1.0, 1.0, False):
-                _loss, _acc, _summary, _step = sess.run(
-                    [loss, acc_num, validate_summary_op, global_step],
+                _loss, _acc, _summary, _step, _p = sess.run(
+                    [loss, acc_num, validate_summary_op, global_step, prob],
                     feed_dict=test)
+                p += list(_p)
                 acc += _acc
                 cost += _loss * num
                 cnt += num
@@ -154,6 +157,11 @@ def main(_):
             print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(i, cost / cnt, acc / cnt)
             if acc / cnt > max_acc:
                 max_acc = acc / cnt
+                max_prob = p
+
+        fp = open(FLAGS.prob_file, 'w')
+        for item in max_prob:
+            fp.write(str(item[0]) + ' ' + str(item[1]) + '\n')
 
         print 'Optimization Finished! Max acc={}'.format(max_acc)
 
