@@ -91,7 +91,7 @@ def dual_method_2():
         sen_len_r = tf.placeholder(tf.int32, [None, FLAGS.max_doc_len])
         doc_len_o = tf.placeholder(tf.int32, None)
         doc_len_r = tf.placeholder(tf.int32, None)
-        y = tf.placeholder(tf.int32, [None, FLAGS.n_class])
+        y = tf.placeholder(tf.float32, [None, FLAGS.n_class])
 
     with tf.device('/gpu:0'):
         inputs_o = tf.nn.embedding_lookup(word_embedding_o, x_o)
@@ -139,9 +139,13 @@ def main(_):
         h_r = hn(inputs_r, sen_len_r, doc_len_r, keep_prob1, keep_prob2, 2)
         prob_r = softmax_layer(h_r, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, 'r')
 
+
+    r_y = tf.reverse(y, [False, True])
     reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-    loss = - tf.reduce_mean(y * tf.log(prob_o)) - tf.reduce_mean((1.0 - y) * tf.log(prob_r)) + sum(reg_loss)
-    prob = prob_o * FLAGS.alpha + (1.0 - FLAGS.alpha) * prob_r
+    # loss = - tf.reduce_mean(y * tf.log(prob_o)) - tf.reduce_mean((tf.ones(tf.shape(y)) - y) * tf.log(prob_r)) + sum(reg_loss)
+    # prob = FLAGS.alpha * prob_o + (1.0 - FLAGS.alpha) * (tf.ones(tf.shape(prob_r)) - prob_r)
+    loss = - tf.reduce_mean(y * tf.log(prob_o)) - tf.reduce_mean(r_y * tf.log(prob_r)) + sum(reg_loss)
+    prob = FLAGS.alpha * prob_o + (1.0 - FLAGS.alpha) * tf.reverse(prob_r, [False, True])
 
     acc_num, acc_prob = acc_func(y, prob)
     global_step = tf.Variable(0, name='tr_global_step', trainable=False)
