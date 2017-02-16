@@ -268,7 +268,7 @@ def main(_):
 
         fp = open(FLAGS.prob_file, 'w')
         for item in max_prob:
-            fp.write(str(item[0]) + ' ' + str(item[1]) + '\n')
+            fp.write(' '.join([str(it) for it in item]) + '\n')
         print 'Optimization Finished! Max acc={}'.format(max_acc)
 
         print 'Learning_rate={}, iter_num={}, batch_size={}, hidden_num={}, l2={}'.format(
