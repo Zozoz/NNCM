@@ -33,7 +33,7 @@ def main(_):
 
     with tf.name_scope('inputs'):
         x = tf.placeholder(tf.int32, [None, FLAGS.max_sentence_len], name='x')
-        y = tf.placeholder(tf.int32, [None, FLAGS.n_class], name='y')
+        y = tf.placeholder(tf.float32, [None, FLAGS.n_class], name='y')
         sen_len = tf.placeholder(tf.int32, [None], name='sen_len')
 
     inputs = tf.nn.embedding_lookup(word_embedding, x)

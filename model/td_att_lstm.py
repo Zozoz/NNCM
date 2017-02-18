@@ -79,7 +79,7 @@ def main(_):
 
     with tf.name_scope('inputs'):
         x = tf.placeholder(tf.int32, [None, FLAGS.max_sentence_len])
-        y = tf.placeholder(tf.int32, [None, FLAGS.n_class])
+        y = tf.placeholder(tf.float32, [None, FLAGS.n_class])
         sen_len = tf.placeholder(tf.int32, None)
 
         x_bw = tf.placeholder(tf.int32, [None, FLAGS.max_sentence_len])
