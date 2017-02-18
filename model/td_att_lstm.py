@@ -4,6 +4,9 @@
 # email: zhengshiliang0@gmail.com
 
 
+import os, sys
+sys.path.append(os.getcwd())
+
 import tensorflow as tf
 from newbie_nn.nn_layer import dynamic_rnn, softmax_layer, bi_dynamic_rnn
 from newbie_nn.att_layer import dot_produce_attention_layer, bilinear_attention_layer, mlp_attention_layer

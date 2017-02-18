@@ -4,6 +4,9 @@
 # email: zhengshiliang0@gmail.com
 
 
+import os, sys
+sys.path.append(os.getcwd())
+
 from sklearn.metrics import precision_score, recall_score, f1_score
 import numpy as np
 import tensorflow as tf

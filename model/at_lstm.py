@@ -4,6 +4,9 @@
 # email: zhengshiliang0@gmail.com
 
 
+import os, sys
+sys.path.append(os.getcwd())
+
 import numpy as np
 import tensorflow as tf
 from newbie_nn.nn_layer import dynamic_rnn, softmax_layer
