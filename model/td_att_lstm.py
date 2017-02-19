@@ -36,7 +36,7 @@ def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_
     r_bw = tf.reshape(tf.batch_matmul(alpha_bw, hidden_bw), [-1, FLAGS.n_hidden])
 
     output = tf.concat(1, [r_fw, r_bw])
-    return softmax_layer(output, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+    return softmax_layer(output, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class), alpha_fw, alpha_bw
 
 
 def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
@@ -93,9 +93,9 @@ def main(_):
     # batch_size = tf.shape(inputs_bw)[0]
     # target = tf.zeros([batch_size, FLAGS.max_sentence_len, FLAGS.embedding_dim]) + target
     target = tf.squeeze(target)
-
+    alpha_fw, alpha_bw = None, None
     if FLAGS.method == 'TD-ATT':
-        prob = TD_att(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, 'all')
+        prob, alpha_fw, alpha_bw = TD_att(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, 'all')
     elif FLAGS.method == 'TD-BI':
         prob = TD_bi(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, FLAGS.t1)
     else:
@@ -105,6 +105,8 @@ def main(_):
     acc_num, acc_prob = acc_func(y, prob)
     global_step = tf.Variable(0, name='tr_global_step', trainable=False)
     optimizer = train_func(loss, FLAGS.learning_rate, global_step)
+    true_y = tf.argmax(y, 1)
+    pred_y = tf.argmax(prob, 1)
 
     title = '-d1-{}d2-{}b-{}r-{}l2-{}sen-{}dim-{}h-{}c-{}'.format(
         FLAGS.keep_prob1,
@@ -161,6 +163,8 @@ def main(_):
                 yield feed_dict, len(index)
 
         max_acc = 0.
+        max_fw, max_bw = None, None
+        max_ty, max_py = None, None
         for i in xrange(FLAGS.n_iter):
             for train, _ in get_batch_data(tr_x, tr_sen_len, tr_x_bw, tr_sen_len_bw, tr_y, tr_target_word, FLAGS.batch_size,
                                                 FLAGS.keep_prob1, FLAGS.keep_prob2):
@@ -172,10 +176,15 @@ def main(_):
             acc, cost, cnt = 0., 0., 0
             flag = True
             summary, step = None, None
+            fw, bw, ty, py = [], [], [], []
             for test, num in get_batch_data(te_x, te_sen_len, te_x_bw, te_sen_len_bw, te_y, te_target_word, 2000, 1.0, 1.0, False):
-                _loss, _acc, _summary, _step = sess.run(
-                    [loss, acc_num, validate_summary_op, global_step],
+                _loss, _acc, _summary, _step, _fw, _bw, _ty, _py = sess.run(
+                    [loss, acc_num, validate_summary_op, global_step, alpha_fw, alpha_bw, true_y, pred_y],
                     feed_dict=test)
+                fw += list(_fw)
+                bw += list(_bw)
+                ty += list(_ty)
+                py += list(_py)
                 acc += _acc
                 cost += _loss * num
                 cnt += num
@@ -189,6 +198,16 @@ def main(_):
             print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(i, cost / cnt, acc / cnt)
             if acc / cnt > max_acc:
                 max_acc = acc / cnt
+                max_fw = fw
+                max_bw = bw
+                max_ty = ty
+                max_py = py
+        fp = open(FLAGS.prob_file + '_fw', 'w')
+        for y1, y2, ws in zip(max_ty, max_py, max_fw):
+            fp.write(str(y1) + ' ' + str(y2) + ' ' + ' '.join([str(w) for w in ws]) + '\n')
+        fp = open(FLAGS.prob_file + '_bw', 'w')
+        for y1, y2, ws in zip(max_ty, max_py, max_bw):
+            fp.write(str(y1) + ' ' + str(y2) + ' ' + ' '.join([str(w) for w in ws]) + '\n')
 
         print 'Optimization Finished! Max acc={}'.format(max_acc)
 

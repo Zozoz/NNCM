@@ -98,6 +98,7 @@ def change_y_to_onehot(y):
     class_set = set(y)
     n_class = len(class_set)
     y_onehot_mapping = dict(zip(class_set, range(n_class)))
+    print y_onehot_mapping
     onehot = []
     for label in y:
         tmp = [0] * n_class
