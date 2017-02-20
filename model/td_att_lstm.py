@@ -7,6 +7,7 @@
 import os, sys
 sys.path.append(os.getcwd())
 
+from sklearn.metrics import precision_score, recall_score, f1_score
 import tensorflow as tf
 from newbie_nn.nn_layer import dynamic_rnn, softmax_layer, bi_dynamic_rnn
 from newbie_nn.att_layer import dot_produce_attention_layer, bilinear_attention_layer, mlp_attention_layer
@@ -90,8 +91,10 @@ def main(_):
     inputs_fw = tf.nn.embedding_lookup(word_embedding, x)
     inputs_bw = tf.nn.embedding_lookup(word_embedding, x_bw)
     target = tf.nn.embedding_lookup(word_embedding, target_words)
+    # for MLP & DOT
     # batch_size = tf.shape(inputs_bw)[0]
     # target = tf.zeros([batch_size, FLAGS.max_sentence_len, FLAGS.embedding_dim]) + target
+    # for BL
     target = tf.squeeze(target)
     alpha_fw, alpha_bw = None, None
     if FLAGS.method == 'TD-ATT':
@@ -202,6 +205,11 @@ def main(_):
                 max_bw = bw
                 max_ty = ty
                 max_py = py
+        p1 = precision_score(max_ty, max_py, pos_label=0)
+        p0 = precision_score(max_ty, max_py, pos_label=1)
+        p_1 = precision_score(max_ty, max_py, pos_label=2)
+        print p1, p0, p_1
+
         fp = open(FLAGS.prob_file + '_fw', 'w')
         for y1, y2, ws in zip(max_ty, max_py, max_fw):
             fp.write(str(y1) + ' ' + str(y2) + ' ' + ' '.join([str(w) for w in ws]) + '\n')
