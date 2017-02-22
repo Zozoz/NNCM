@@ -85,7 +85,10 @@ def main(_):
         FLAGS.n_class
     )
 
-    with tf.Session() as sess:
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    config.gpu_options.allow_soft_placement = True
+    with tf.Session(config=config) as sess:
         import time
         timestamp = str(int(time.time()))
         _dir = 'summary/' + str(timestamp) + '_' + title
