@@ -9,6 +9,7 @@ sys.path.append(os.getcwd())
 
 import numpy as np
 import tensorflow as tf
+from sklearn.metrics import precision_score, recall_score, f1_score
 
 from newbie_nn.config import *
 from newbie_nn.nn_layer import dynamic_rnn, bi_dynamic_rnn, softmax_layer
@@ -28,7 +29,8 @@ def hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
     alpha_doc = mlp_attention_layer(hiddens_doc, doc_len, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 2)
     outputs_doc = tf.reshape(tf.batch_matmul(alpha_doc, hiddens_doc), [-1, 2 * FLAGS.n_hidden])
 
-    return softmax_layer(outputs_doc, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+    prob = softmax_layer(outputs_doc, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+    return prob, tf.reshape(alpha_sen, [-1, FLAGS.max_doc_len, FLAGS.max_sentence_len]), tf.reshape(alpha_doc, [-1, FLAGS.max_doc_len])
 
 
 def hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2, id_=1):
@@ -59,13 +61,17 @@ def main(_):
     inputs = tf.nn.embedding_lookup(word_embedding, x)
     inputs = tf.reshape(inputs, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
 
-    # prob = hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2)
-    prob = hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2)
+    if FLAGS.method == 'ATT':
+        prob, alpha_sen, alpha_doc = hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2)
+    else:
+        prob = hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2)
 
     loss = loss_func(y, prob)
     acc_num, acc_prob = acc_func(y, prob)
     global_step = tf.Variable(0, name='tr_global_step', trainable=False)
     optimizer = train_func(loss, FLAGS.learning_rate, global_step)
+    true_y = tf.argmax(y, axis=1)
+    pred_y = tf.argmax(prob, axis=1)
 
     title = '-d1-{}d2-{}b-{}r-{}l2-{}sen-{}dim-{}h-{}c-{}'.format(
         FLAGS.keep_prob1,
@@ -126,7 +132,8 @@ def main(_):
                 yield feed_dict, len(index)
 
         max_acc = 0.
-        max_prob = None
+        max_prob, max_ty, max_py = None, None, None
+        max_alpha_s, max_alpha_d = None, None
         for i in xrange(FLAGS.n_iter):
             for train, _ in get_batch_data(tr_x, tr_y, tr_sen_len, tr_doc_len, FLAGS.batch_size,
                                                 FLAGS.keep_prob1, FLAGS.keep_prob2):
@@ -139,11 +146,22 @@ def main(_):
             flag = True
             p = []
             summary, step = None, None
+            ty, py = [], []
+            alpha_s, alpha_d = [], []
             for test, num in get_batch_data(te_x, te_y, te_sen_len, te_doc_len, 2000, 1.0, 1.0, False):
-                _loss, _acc, _summary, _step, _p = sess.run(
-                    [loss, acc_num, validate_summary_op, global_step, prob],
-                    feed_dict=test)
+                if FLAGS.method == 'ATT':
+                    _loss, _acc, _summary, _step, _p, _ty, _py, _alpha_sen, _alpha_doc = sess.run(
+                        [loss, acc_num, validate_summary_op, global_step, prob, true_y, pred_y, alpha_sen, alpha_doc],
+                        feed_dict=test)
+                    alpha_s += _alpha_sen
+                    alpha_d += _alpha_doc
+                else:
+                    _loss, _acc, _summary, _step, _p, _ty, _py = sess.run(
+                        [loss, acc_num, validate_summary_op, global_step, prob, true_y, pred_y],
+                        feed_dict=test)
                 p += list(_p)
+                ty += list(_ty)
+                py += list(_py)
                 acc += _acc
                 cost += _loss * num
                 cnt += num
@@ -158,6 +176,21 @@ def main(_):
             if acc / cnt > max_acc:
                 max_acc = acc / cnt
                 max_prob = p
+                max_ty = ty
+                max_py = py
+                max_alpha_s = alpha_s
+                max_alpha_d = alpha_d
+        print 'P:', precision_score(max_ty, max_py, average=None)
+        print 'R:', recall_score(max_ty, max_py, average=None)
+        print 'F:', f1_score(max_ty, max_py, average=None)
+
+        if FLAGS.method == 'ATT':
+            fp = open('alpha_sen_' + FLAGS.prob_file, 'w')
+            for item in max_alpha_s:
+                fp.write(' '.join([str(it) for it in item]) + '\n')
+            fp = open('alpha_doc_' + FLAGS.prob_file, 'w')
+            for item in max_alpha_d:
+                fp.write(' '.join([str(it) for it in item]) + '\n')
 
         fp = open(FLAGS.prob_file, 'w')
         for item in max_prob:

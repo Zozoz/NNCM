@@ -22,18 +22,18 @@ def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_
     input_bw = tf.nn.dropout(input_bw, keep_prob=keep_prob1)
     # forward
     hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
-    # ht_fw = tf.concat(2, [hidden_fw, target])
+    ht_fw = tf.concat(2, [hidden_fw, target])
     # alpha_fw = dot_produce_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
-    # alpha_fw = mlp_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
-    alpha_fw = bilinear_attention_layer(hidden_fw, target, sen_len_fw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+    alpha_fw = mlp_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+    # alpha_fw = bilinear_attention_layer(hidden_fw, target, sen_len_fw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
     r_fw = tf.reshape(tf.batch_matmul(alpha_fw, hidden_fw), [-1, FLAGS.n_hidden])
 
     # backward
     hidden_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
-    # ht_bw = tf.concat(2, [hidden_bw, target])
+    ht_bw = tf.concat(2, [hidden_bw, target])
     # alpha_bw = dot_produce_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
-    # alpha_bw = mlp_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
-    alpha_bw = bilinear_attention_layer(hidden_bw, target, sen_len_bw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
+    alpha_bw = mlp_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
+    # alpha_bw = bilinear_attention_layer(hidden_bw, target, sen_len_bw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
     r_bw = tf.reshape(tf.batch_matmul(alpha_bw, hidden_bw), [-1, FLAGS.n_hidden])
 
     output = tf.concat(1, [r_fw, r_bw])
@@ -92,10 +92,10 @@ def main(_):
     inputs_bw = tf.nn.embedding_lookup(word_embedding, x_bw)
     target = tf.nn.embedding_lookup(word_embedding, target_words)
     # for MLP & DOT
-    # batch_size = tf.shape(inputs_bw)[0]
-    # target = tf.zeros([batch_size, FLAGS.max_sentence_len, FLAGS.embedding_dim]) + target
+    batch_size = tf.shape(inputs_bw)[0]
+    target = tf.zeros([batch_size, FLAGS.max_sentence_len, FLAGS.embedding_dim]) + target
     # for BL
-    target = tf.squeeze(target)
+    # target = tf.squeeze(target)
     alpha_fw, alpha_bw = None, None
     if FLAGS.method == 'TD-ATT':
         prob, alpha_fw, alpha_bw = TD_att(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, 'all')
@@ -205,10 +205,9 @@ def main(_):
                 max_bw = bw
                 max_ty = ty
                 max_py = py
-        p1 = precision_score(max_ty, max_py, pos_label=0)
-        p0 = precision_score(max_ty, max_py, pos_label=1)
-        p_1 = precision_score(max_ty, max_py, pos_label=2)
-        print p1, p0, p_1
+        print 'P:', precision_score(max_ty, max_py, average=None)
+        print 'R:', recall_score(max_ty, max_py, average=None)
+        print 'F:', f1_score(max_ty, max_py, average=None)
 
         fp = open(FLAGS.prob_file + '_fw', 'w')
         for y1, y2, ws in zip(max_ty, max_py, max_fw):
