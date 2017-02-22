@@ -211,10 +211,10 @@ def main(_):
 
         fp = open(FLAGS.prob_file + '_fw', 'w')
         for y1, y2, ws in zip(max_ty, max_py, max_fw):
-            fp.write(str(y1) + ' ' + str(y2) + ' ' + ' '.join([str(w) for w in ws]) + '\n')
+            fp.write(str(y1) + ' ' + str(y2) + ' ' + ' '.join([str(w) for w in ws[0]]) + '\n')
         fp = open(FLAGS.prob_file + '_bw', 'w')
         for y1, y2, ws in zip(max_ty, max_py, max_bw):
-            fp.write(str(y1) + ' ' + str(y2) + ' ' + ' '.join([str(w) for w in ws]) + '\n')
+            fp.write(str(y1) + ' ' + str(y2) + ' ' + ' '.join([str(w) for w in ws[0]]) + '\n')
 
         print 'Optimization Finished! Max acc={}'.format(max_acc)
 

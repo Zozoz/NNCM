@@ -70,8 +70,8 @@ def main(_):
     acc_num, acc_prob = acc_func(y, prob)
     global_step = tf.Variable(0, name='tr_global_step', trainable=False)
     optimizer = train_func(loss, FLAGS.learning_rate, global_step)
-    true_y = tf.argmax(y, axis=1)
-    pred_y = tf.argmax(prob, axis=1)
+    true_y = tf.argmax(y, 1)
+    pred_y = tf.argmax(prob, 1)
 
     title = '-d1-{}d2-{}b-{}r-{}l2-{}sen-{}dim-{}h-{}c-{}'.format(
         FLAGS.keep_prob1,
@@ -153,8 +153,8 @@ def main(_):
                     _loss, _acc, _summary, _step, _p, _ty, _py, _alpha_sen, _alpha_doc = sess.run(
                         [loss, acc_num, validate_summary_op, global_step, prob, true_y, pred_y, alpha_sen, alpha_doc],
                         feed_dict=test)
-                    alpha_s += _alpha_sen
-                    alpha_d += _alpha_doc
+                    alpha_s += list(_alpha_sen)
+                    alpha_d += list(_alpha_doc)
                 else:
                     _loss, _acc, _summary, _step, _p, _ty, _py = sess.run(
                         [loss, acc_num, validate_summary_op, global_step, prob, true_y, pred_y],
@@ -186,8 +186,9 @@ def main(_):
 
         if FLAGS.method == 'ATT':
             fp = open('alpha_sen_' + FLAGS.prob_file, 'w')
-            for item in max_alpha_s:
-                fp.write(' '.join([str(it) for it in item]) + '\n')
+            for doc in max_alpha_s:
+                for item in doc:
+                    fp.write(' '.join([str(it) for it in item]) + '\n')
             fp = open('alpha_doc_' + FLAGS.prob_file, 'w')
             for item in max_alpha_d:
                 fp.write(' '.join([str(it) for it in item]) + '\n')
