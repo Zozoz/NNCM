@@ -22,6 +22,7 @@ def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_
     input_bw = tf.nn.dropout(input_bw, keep_prob=keep_prob1)
     # forward
     hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
+    tf.Print(hidden_fw, [hidden_fw], 'P1')
     ht_fw = tf.concat(2, [hidden_fw, target])
     # alpha_fw = dot_produce_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
     alpha_fw = mlp_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
@@ -71,59 +72,63 @@ def TD_bi(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_p
 
 
 def main(_):
-    word_id_mapping, w2v = load_w2v(FLAGS.embedding_file_path, FLAGS.embedding_dim)
-    word_embedding = tf.constant(w2v, name='word_embedding')
-    # word_embedding = tf.Variable(w2v, name='word_embedding')
+    with tf.device('/gpu:1'):
+        word_id_mapping, w2v = load_w2v(FLAGS.embedding_file_path, FLAGS.embedding_dim)
+        word_embedding = tf.constant(w2v, name='word_embedding')
+        # word_embedding = tf.Variable(w2v, name='word_embedding')
 
-    keep_prob1 = tf.placeholder(tf.float32)
-    keep_prob2 = tf.placeholder(tf.float32)
+        keep_prob1 = tf.placeholder(tf.float32)
+        keep_prob2 = tf.placeholder(tf.float32)
 
-    with tf.name_scope('inputs'):
-        x = tf.placeholder(tf.int32, [None, FLAGS.max_sentence_len])
-        y = tf.placeholder(tf.float32, [None, FLAGS.n_class])
-        sen_len = tf.placeholder(tf.int32, None)
+        with tf.name_scope('inputs'):
+            x = tf.placeholder(tf.int32, [None, FLAGS.max_sentence_len])
+            y = tf.placeholder(tf.float32, [None, FLAGS.n_class])
+            sen_len = tf.placeholder(tf.int32, None)
 
-        x_bw = tf.placeholder(tf.int32, [None, FLAGS.max_sentence_len])
-        sen_len_bw = tf.placeholder(tf.int32, [None])
+            x_bw = tf.placeholder(tf.int32, [None, FLAGS.max_sentence_len])
+            sen_len_bw = tf.placeholder(tf.int32, [None])
 
-        target_words = tf.placeholder(tf.int32, [None, 1])
+            target_words = tf.placeholder(tf.int32, [None, 1])
 
-    inputs_fw = tf.nn.embedding_lookup(word_embedding, x)
-    inputs_bw = tf.nn.embedding_lookup(word_embedding, x_bw)
-    target = tf.nn.embedding_lookup(word_embedding, target_words)
-    # for MLP & DOT
-    batch_size = tf.shape(inputs_bw)[0]
-    target = tf.zeros([batch_size, FLAGS.max_sentence_len, FLAGS.embedding_dim]) + target
-    # for BL
-    # target = tf.squeeze(target)
-    alpha_fw, alpha_bw = None, None
-    if FLAGS.method == 'TD-ATT':
-        prob, alpha_fw, alpha_bw = TD_att(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, 'all')
-    elif FLAGS.method == 'TD-BI':
-        prob = TD_bi(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, FLAGS.t1)
-    else:
-        prob = TD(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, FLAGS.t1)
+        inputs_fw = tf.nn.embedding_lookup(word_embedding, x)
+        inputs_bw = tf.nn.embedding_lookup(word_embedding, x_bw)
+        target = tf.nn.embedding_lookup(word_embedding, target_words)
+        # for MLP & DOT
+        batch_size = tf.shape(inputs_bw)[0]
+        target = tf.zeros([batch_size, FLAGS.max_sentence_len, FLAGS.embedding_dim]) + target
+        # for BL
+        # target = tf.squeeze(target)
+        alpha_fw, alpha_bw = None, None
+        if FLAGS.method == 'TD-ATT':
+            prob, alpha_fw, alpha_bw = TD_att(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, 'all')
+        elif FLAGS.method == 'TD-BI':
+            prob = TD_bi(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, FLAGS.t1)
+        else:
+            prob = TD(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, FLAGS.t1)
 
-    loss = loss_func(y, prob)
-    acc_num, acc_prob = acc_func(y, prob)
-    global_step = tf.Variable(0, name='tr_global_step', trainable=False)
-    optimizer = train_func(loss, FLAGS.learning_rate, global_step)
-    true_y = tf.argmax(y, 1)
-    pred_y = tf.argmax(prob, 1)
+        loss = loss_func(y, prob)
+        acc_num, acc_prob = acc_func(y, prob)
+        global_step = tf.Variable(0, name='tr_global_step', trainable=False)
+        optimizer = train_func(loss, FLAGS.learning_rate, global_step)
+        true_y = tf.argmax(y, 1)
+        pred_y = tf.argmax(prob, 1)
 
-    title = '-d1-{}d2-{}b-{}r-{}l2-{}sen-{}dim-{}h-{}c-{}'.format(
-        FLAGS.keep_prob1,
-        FLAGS.keep_prob2,
-        FLAGS.batch_size,
-        FLAGS.learning_rate,
-        FLAGS.l2_reg,
-        FLAGS.max_sentence_len,
-        FLAGS.embedding_dim,
-        FLAGS.n_hidden,
-        FLAGS.n_class
-    )
+        title = '-d1-{}d2-{}b-{}r-{}l2-{}sen-{}dim-{}h-{}c-{}'.format(
+            FLAGS.keep_prob1,
+            FLAGS.keep_prob2,
+            FLAGS.batch_size,
+            FLAGS.learning_rate,
+            FLAGS.l2_reg,
+            FLAGS.max_sentence_len,
+            FLAGS.embedding_dim,
+            FLAGS.n_hidden,
+            FLAGS.n_class
+        )
 
-    with tf.Session() as sess:
+
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess:
         import time
         timestamp = str(int(time.time()))
         _dir = 'summary/' + str(timestamp) + '_' + title
