@@ -22,7 +22,6 @@ def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_
     input_bw = tf.nn.dropout(input_bw, keep_prob=keep_prob1)
     # forward
     hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
-    tf.Print(hidden_fw, [hidden_fw], 'P1')
     ht_fw = tf.concat(2, [hidden_fw, target])
     # alpha_fw = dot_produce_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
     alpha_fw = mlp_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
@@ -135,7 +134,7 @@ def main(_):
         train_summary_op, test_summary_op, validate_summary_op, \
         train_summary_writer, test_summary_writer, validate_summary_writer = summary_func(loss, acc_prob, _dir, title, sess)
 
-        save_dir = 'model/' + str(timestamp) + '_' + title + '/'
+        save_dir = 'temp_model/' + str(timestamp) + '_' + title + '/'
         saver = saver_func(save_dir)
 
         init = tf.initialize_all_variables()
@@ -186,11 +185,16 @@ def main(_):
             summary, step = None, None
             fw, bw, ty, py = [], [], [], []
             for test, num in get_batch_data(te_x, te_sen_len, te_x_bw, te_sen_len_bw, te_y, te_target_word, 2000, 1.0, 1.0, False):
-                _loss, _acc, _summary, _step, _fw, _bw, _ty, _py = sess.run(
-                    [loss, acc_num, validate_summary_op, global_step, alpha_fw, alpha_bw, true_y, pred_y],
-                    feed_dict=test)
-                fw += list(_fw)
-                bw += list(_bw)
+                if FLAGS.method == 'TD-ATT':
+                    _loss, _acc, _summary, _step, _fw, _bw, _ty, _py = sess.run(
+                        [loss, acc_num, validate_summary_op, global_step, alpha_fw, alpha_bw, true_y, pred_y],
+                        feed_dict=test)
+                    fw += list(_fw)
+                    bw += list(_bw)
+                else:
+                    _loss, _acc, _summary, _step, _ty, _py = sess.run(
+                        [loss, acc_num, validate_summary_op, global_step, true_y, pred_y],
+                        feed_dict=test)
                 ty += list(_ty)
                 py += list(_py)
                 acc += _acc
