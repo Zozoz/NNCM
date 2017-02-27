@@ -10,9 +10,12 @@ sys.path.append(os.getcwd())
 from sklearn.metrics import precision_score, recall_score, f1_score
 import tensorflow as tf
 from newbie_nn.nn_layer import dynamic_rnn, softmax_layer, bi_dynamic_rnn
-from newbie_nn.att_layer import dot_produce_attention_layer, bilinear_attention_layer, mlp_attention_layer
+from newbie_nn.att_layer import dot_produce_attention_layer, bilinear_attention_layer, mlp_attention_layer, Mlp_attention_layer
 from newbie_nn.config import *
 from data_prepare.utils import load_w2v, batch_index, load_word_embedding, load_aspect2id, load_inputs_twitter
+tf.app.flags.DEFINE_string('is_m', '1', 'prob')
+tf.app.flags.DEFINE_string('is_r', '1', 'prob')
+tf.app.flags.DEFINE_string('is_bi', '1', 'prob')
 
 
 def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
@@ -21,23 +24,54 @@ def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_
     input_fw = tf.nn.dropout(input_fw, keep_prob=keep_prob1)
     input_bw = tf.nn.dropout(input_bw, keep_prob=keep_prob1)
     # forward
-    hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
-    ht_fw = tf.concat(2, [hidden_fw, target])
-    # alpha_fw = dot_produce_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
-    alpha_fw = mlp_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
-    # alpha_fw = bilinear_attention_layer(hidden_fw, target, sen_len_fw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
-    r_fw = tf.reshape(tf.batch_matmul(alpha_fw, hidden_fw), [-1, FLAGS.n_hidden])
+    if FLAGS.is_bi == '1':
+        hidden_fw = bi_dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
+        ht_fw = tf.concat(2, [hidden_fw, target])
+        # alpha_fw = dot_produce_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+        if FLAGS.is_m == '1':
+            alpha_fw = mlp_attention_layer(ht_fw, sen_len_fw, 2 * FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+        else:
+            alpha_fw = Mlp_attention_layer(ht_fw, sen_len_fw, 2 * FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+        # alpha_fw = bilinear_attention_layer(hidden_fw, target, sen_len_fw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+        r_fw = tf.reshape(tf.batch_matmul(alpha_fw, hidden_fw), [-1, 2 * FLAGS.n_hidden])
+    else:
+        hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
+        ht_fw = tf.concat(2, [hidden_fw, target])
+        # alpha_fw = dot_produce_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+        if FLAGS.is_m == '1':
+            alpha_fw = mlp_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+        else:
+            alpha_fw = Mlp_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+        # alpha_fw = bilinear_attention_layer(hidden_fw, target, sen_len_fw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+        r_fw = tf.reshape(tf.batch_matmul(alpha_fw, hidden_fw), [-1, FLAGS.n_hidden])
 
     # backward
-    hidden_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
-    ht_bw = tf.concat(2, [hidden_bw, target])
-    # alpha_bw = dot_produce_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
-    alpha_bw = mlp_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
-    # alpha_bw = bilinear_attention_layer(hidden_bw, target, sen_len_bw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
-    r_bw = tf.reshape(tf.batch_matmul(alpha_bw, hidden_bw), [-1, FLAGS.n_hidden])
+    if FLAGS.is_bi == '1':
+        hidden_bw = bi_dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
+        ht_bw = tf.concat(2, [hidden_bw, target])
+        # alpha_bw = dot_produce_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
+        if FLAGS.is_m == '1':
+            alpha_bw = mlp_attention_layer(ht_bw, sen_len_bw, 2 * FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
+        else:
+            alpha_bw = Mlp_attention_layer(ht_bw, sen_len_bw, 2 * FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
+        # alpha_bw = bilinear_attention_layer(hidden_bw, target, sen_len_bw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
+        r_bw = tf.reshape(tf.batch_matmul(alpha_bw, hidden_bw), [-1, 2 * FLAGS.n_hidden])
+    else:
+        hidden_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
+        ht_bw = tf.concat(2, [hidden_bw, target])
+        # alpha_bw = dot_produce_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
+        if FLAGS.is_m == '1':
+            alpha_bw = mlp_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
+        else:
+            alpha_bw = Mlp_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
+        # alpha_bw = bilinear_attention_layer(hidden_bw, target, sen_len_bw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
+        r_bw = tf.reshape(tf.batch_matmul(alpha_bw, hidden_bw), [-1, FLAGS.n_hidden])
 
     output = tf.concat(1, [r_fw, r_bw])
-    return softmax_layer(output, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class), alpha_fw, alpha_bw
+    if FLAGS.is_bi == '1':
+        return softmax_layer(output, 4 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class), alpha_fw, alpha_bw
+    else:
+        return softmax_layer(output, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class), alpha_fw, alpha_bw
 
 
 def TD(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
@@ -142,17 +176,24 @@ def main(_):
 
         # saver.restore(sess, '/-')
 
+        if FLAGS.is_r == '1':
+            is_r = True
+        else:
+            is_r = False
+
         tr_x, tr_sen_len, tr_x_bw, tr_sen_len_bw, tr_y, tr_target_word = load_inputs_twitter(
             FLAGS.train_file_path,
             word_id_mapping,
             FLAGS.max_sentence_len,
-            'TC'
+            'TC',
+            is_r
         )
         te_x, te_sen_len, te_x_bw, te_sen_len_bw, te_y, te_target_word = load_inputs_twitter(
             FLAGS.test_file_path,
             word_id_mapping,
             FLAGS.max_sentence_len,
-            'TC'
+            'TC',
+            is_r
         )
 
         def get_batch_data(x_f, sen_len_f, x_b, sen_len_b, yi, target, batch_size, kp1, kp2, is_shuffle=True):

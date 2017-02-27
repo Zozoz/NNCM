@@ -107,7 +107,7 @@ def change_y_to_onehot(y):
     return np.asarray(onehot, dtype=np.int32)
 
 
-def load_inputs_twitter(input_file, word_id_file, sentence_len, type_='', encoding='utf8'):
+def load_inputs_twitter(input_file, word_id_file, sentence_len, type_='', is_r=True, encoding='utf8'):
     if type(word_id_file) is str:
         word_to_id = load_word_id_mapping(word_id_file)
     else:
@@ -149,7 +149,8 @@ def load_inputs_twitter(input_file, word_id_file, sentence_len, type_='', encodi
             sen_len.append(len(words_l))
             x.append(words_l + [0] * (sentence_len - len(words_l)))
             tmp = target_word + words_r
-            tmp.reverse()
+            if is_r:
+                tmp.reverse()
             sen_len_r.append(len(tmp))
             x_r.append(tmp + [0] * (sentence_len - len(tmp)))
         else:
