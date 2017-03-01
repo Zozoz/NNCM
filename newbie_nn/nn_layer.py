@@ -8,6 +8,28 @@ import numpy as np
 import tensorflow as tf
 
 
+def cnn_layer(inputs, filter_size, strides, padding, random_base, l2_reg, active_func=None, scope_name="conv"):
+    w = tf.get_variable(
+        name='conv' + scope_name,
+        shape=filter_size,
+        # initializer=tf.random_normal_initializer(mean=0., stddev=1.0),
+        initializer=tf.random_uniform_initializer(-random_base, random_base),
+        regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
+    )
+    b = tf.get_variable(
+        name='softmax_b' + scope_name,
+        shape=[filter_size[0]],
+        # initializer=tf.random_normal_initializer(mean=0., stddev=1.0),
+        initializer=tf.random_uniform_initializer(-random_base, random_base),
+        regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
+    )
+    x = tf.nn.conv2d(inputs, w, strides, padding) + b
+    if active_func is None:
+        active_func = tf.nn.relu
+    return active_func(x)
+
+
+
 def dynamic_rnn(cell, inputs, n_hidden, length, max_len, scope_name, out_type='last'):
     outputs, state = tf.nn.dynamic_rnn(
         cell(n_hidden),

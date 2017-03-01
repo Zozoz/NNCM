@@ -254,7 +254,7 @@ def load_inputs_sentence(input_file, word_id_file, sentence_len, encoding='utf8'
     return np.asarray(x), np.asarray(sen_len), np.asarray(y)
 
 
-def load_inputs_document(input_file, word_id_file, max_sen_len, max_doc_len, encoding='utf8'):
+def load_inputs_document(input_file, word_id_file, max_sen_len, max_doc_len, type=None, encoding='utf8'):
     if type(word_id_file) is str:
         word_to_id = load_word_id_mapping(word_id_file)
     else:
@@ -271,8 +271,16 @@ def load_inputs_document(input_file, word_id_file, max_sen_len, max_doc_len, enc
         doc = ' '.join(line[1:])
         sentences = doc.split('<sssss>')
         i = 0
+        pre = ''
         for sentence in sentences:
             j = 0
+            if type == 'CNN':
+                sentence = pre + ' ' + sentence
+                if len(sentence.split()) < 5:
+                    pre = sentence
+                    continue
+                else:
+                    pre = ''
             for word in sentence.split():
                 if j < max_sen_len:
                     if word in word_to_id:
