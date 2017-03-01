@@ -18,7 +18,7 @@ def cnn_layer(inputs, filter_size, strides, padding, random_base, l2_reg, active
     )
     b = tf.get_variable(
         name='softmax_b' + scope_name,
-        shape=[filter_size[0]],
+        shape=[filter_size[-1]],
         # initializer=tf.random_normal_initializer(mean=0., stddev=1.0),
         initializer=tf.random_uniform_initializer(-random_base, random_base),
         regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
@@ -27,7 +27,6 @@ def cnn_layer(inputs, filter_size, strides, padding, random_base, l2_reg, active
     if active_func is None:
         active_func = tf.nn.relu
     return active_func(x)
-
 
 
 def dynamic_rnn(cell, inputs, n_hidden, length, max_len, scope_name, out_type='last'):
@@ -132,16 +131,16 @@ def softmax_layer(inputs, n_hidden, random_base, keep_prob, l2_reg, n_class, sco
     w = tf.get_variable(
         name='softmax_w' + scope_name,
         shape=[n_hidden, n_class],
-        # initializer=tf.random_normal_initializer(mean=0., stddev=1.0),
-        initializer=tf.random_uniform_initializer(-random_base, random_base),
+        initializer=tf.random_normal_initializer(mean=0., stddev=np.sqrt(2. / (n_hidden + n_class))),
+        # initializer=tf.random_uniform_initializer(-random_base, random_base),
         # initializer=tf.random_uniform_initializer(-np.sqrt(6.0 / (n_hidden + n_class)), np.sqrt(6.0 / (n_hidden + n_class))),
         regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
     )
     b = tf.get_variable(
         name='softmax_b' + scope_name,
         shape=[n_class],
-        # initializer=tf.random_normal_initializer(mean=0., stddev=1.0),
-        initializer=tf.random_uniform_initializer(-random_base, random_base),
+        initializer=tf.random_normal_initializer(mean=0., stddev=np.sqrt(2. / (n_class))),
+        # initializer=tf.random_uniform_initializer(-random_base, random_base),
         regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
     )
     with tf.name_scope('softmax'):
