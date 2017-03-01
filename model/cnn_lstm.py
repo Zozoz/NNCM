@@ -27,11 +27,11 @@ def cnn_lstm(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
 
     conv2 = cnn_layer(inputs, [2, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base, FLAGS.l2_reg, scope_name='conv2')
     conv2 = tf.reshape(conv2, [-1, FLAGS.max_sentence_len - 1, FLAGS.n_hidden])
-    conv2 = reduce_mean_with_len(conv2, sen_len - 2)
+    conv2 = reduce_mean_with_len(conv2, sen_len - 1)
 
     conv3 = cnn_layer(inputs, [1, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base, FLAGS.l2_reg, scope_name='conv3')
     conv3 = tf.reshape(conv3, [-1, FLAGS.max_sentence_len - 0, FLAGS.n_hidden])
-    conv3 = reduce_mean_with_len(conv3, sen_len - 2)
+    conv3 = reduce_mean_with_len(conv3, sen_len - 0)
 
     outputs = (tf.tanh(conv1) + tf.tanh(conv2) + tf.tanh(conv3) ) / 3.
 
