@@ -20,9 +20,20 @@ from data_prepare.utils import load_w2v, batch_index, load_word_embedding, load_
 def cnn_lstm(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
     inputs = tf.reshape(inputs, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim, 1])
-    outputs = cnn_layer(inputs, [3, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base, FLAGS.l2_reg)
-    outputs = tf.reshape(outputs, [-1, FLAGS.max_sentence_len - 2, FLAGS.n_hidden])
-    outputs = reduce_mean_with_len(outputs, sen_len - 2)
+
+    conv1 = cnn_layer(inputs, [3, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base, FLAGS.l2_reg)
+    conv1 = tf.reshape(conv1, [-1, FLAGS.max_sentence_len - 2, FLAGS.n_hidden])
+    conv1 = reduce_mean_with_len(conv1, sen_len - 2)
+
+    conv2 = cnn_layer(inputs, [2, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base, FLAGS.l2_reg)
+    conv2 = tf.reshape(conv2, [-1, FLAGS.max_sentence_len - 1, FLAGS.n_hidden])
+    conv2 = reduce_mean_with_len(conv2, sen_len - 2)
+
+    conv3 = cnn_layer(inputs, [1, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base, FLAGS.l2_reg)
+    conv3 = tf.reshape(conv3, [-1, FLAGS.max_sentence_len - 0, FLAGS.n_hidden])
+    conv3 = reduce_mean_with_len(conv3, sen_len - 2)
+
+    outputs = (tf.tanh(conv1) + tf.tanh(conv2) + tf.tanh(conv3) ) / 3.
 
     outputs = tf.reshape(outputs, [-1, FLAGS.max_doc_len, FLAGS.n_hidden])
     cell = tf.nn.rnn_cell.LSTMCell
@@ -121,7 +132,7 @@ def main(_):
             ty, py = [], []
             for test, num in get_batch_data(te_x, te_y, te_sen_len, te_doc_len, 2000, 1.0, 1.0, False):
                 _loss, _acc, _summary, _step, _p, _ty, _py = sess.run(
-                    [loss, acc_num, validate_summary_op, global_step, prob, true_y, pred_y],
+                    [loss, acc_num, test_summary_op, global_step, prob, true_y, pred_y],
                     feed_dict=test)
                 p += list(_p)
                 ty += list(_ty)

@@ -80,11 +80,11 @@ def main(_):
             word_id_mapping,
             FLAGS.max_sentence_len
         )
-        # te_x, te_sen_len, te_y = load_inputs_sentence(
-        #     FLAGS.test_file_path,
-        #     word_id_mapping,
-        #     FLAGS.max_sentence_len
-        # )
+        te_x, te_sen_len, te_y = load_inputs_sentence(
+            FLAGS.test_file_path,
+            word_id_mapping,
+            FLAGS.max_sentence_len
+        )
 
         def get_batch_data(xi, sen_leni, yi, batch_size, kp1, kp2, is_shuffle=True):
             for index in batch_index(len(yi), batch_size, 1, is_shuffle):
@@ -98,46 +98,6 @@ def main(_):
                 yield feed_dict, len(index)
 
         max_acc = 0.
-        """
-        for i in xrange(0, 1000, 5):
-            saver.restore(sess, save_dir + '-' + str(i))
-
-            acc, cost, cnt = 0., 0., 0
-            y_prob = []
-            y_pred = []
-            for test, num in get_batch_data(te_x, te_sen_len, te_y, 2200, 1.0, 1.0, False):
-                _loss, _acc, _step, y_pred_tmp, y_prob_tmp = sess.run(
-                    [loss, acc_num, global_step, y_p, prob],
-                    feed_dict=test)
-                y_prob.extend(y_prob_tmp)
-                y_pred.extend(y_pred_tmp)
-                acc += _acc
-                cost += _loss * num
-                cnt += num
-            y_true = np.argmax(te_y, 1)
-            p0 = precision_score(y_true, y_pred, pos_label=0)
-            p1 = precision_score(y_true, y_pred, pos_label=1)
-            p = (p0 + p1) / 2
-            print 'macro P:', p
-            r0 = recall_score(y_true, y_pred, pos_label=0)
-            r1 = recall_score(y_true, y_pred, pos_label=1)
-            r = (r0 + r1) / 2
-            print 'macro R:', r
-            print 'macro F1:', 2 * p * r / (p + r)
-            print 'all samples={}, correct prediction={}'.format(cnt, acc)
-            # test_summary_writer.add_summary(summary, step)
-            # saver.save(sess, save_dir, global_step=step)
-            print 'mini-batch loss={:.6f}, test acc={:.6f}\n'.format(cost / cnt, acc / cnt)
-            # prob_dir = 'prob/' + FLAGS.train_file_path + '/'
-            # import os
-            # if not os.path.exists(prob_dir):
-            #     os.makedirs(prob_dir)
-            # fp = open(prob_dir + FLAGS.prob_file, 'w')
-            # fp.write(str(p) + ' ' + str(r) + ' ' + str(2 * p * r / (p + r)) + '\n')
-            # for pb in y_prob:
-            #     fp.write(str(pb[0]) + ' ' + str(pb[1]) + '\n')
-
-        """
         for i in xrange(FLAGS.n_iter):
             step = None
             for train, _ in get_batch_data(tr_x, tr_sen_len, tr_y, FLAGS.batch_size,
@@ -146,7 +106,6 @@ def main(_):
                 train_summary_writer.add_summary(summary, step)
                 if step % FLAGS.display_step == 0:
                     saver.save(sess, save_dir, global_step=step)
-                """
                 if step % FLAGS.display_step == 0:
                     acc, cost, cnt = 0., 0., 0
                     flag = True
@@ -155,7 +114,7 @@ def main(_):
                     y_pred = []
                     for test, num in get_batch_data(te_x, te_sen_len, te_y, 2200, 1.0, 1.0, False):
                         _loss, _acc, _summary, _step, y_pred_tmp, y_prob_tmp = sess.run(
-                            [loss, acc_num, validate_summary_op, global_step, y_p, prob],
+                            [loss, acc_num, test_summary_op, global_step, y_p, prob],
                             feed_dict=test)
                         y_prob.extend(y_prob_tmp)
                         y_pred.extend(y_pred_tmp)
@@ -165,17 +124,6 @@ def main(_):
                         if flag:
                             summary = _summary
                             flag = False
-                    y_true = np.argmax(te_y, 1)
-                    p0 = precision_score(y_true, y_pred, pos_label=0)
-                    p1 = precision_score(y_true, y_pred, pos_label=1)
-                    p = (p0 + p1) / 2
-                    print 'macro P:', p
-                    r0 = recall_score(y_true, y_pred, pos_label=0)
-                    r1 = recall_score(y_true, y_pred, pos_label=1)
-                    r = (r0 + r1) / 2
-                    print 'macro R:', r
-                    print 'macro F1:', 2 * p * r / (p + r)
-                    print 'all samples={}, correct prediction={}'.format(cnt, acc)
                     test_summary_writer.add_summary(summary, step)
                     saver.save(sess, save_dir, global_step=step)
                     print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}\n'.format(step, cost / cnt, acc / cnt)
@@ -183,11 +131,9 @@ def main(_):
                         max_acc = acc / cnt
                     if step == 2500:
                         fp = open(FLAGS.prob_file, 'w')
-                        fp.write(str(p) + ' ' + str(r) + ' ' + str(r) + '\n')
                         for pb in y_prob:
                             fp.write(str(pb[0]) + ' ' + str(pb[1]) + '\n')
                         break
-"""
         print 'Optimization Finished! Max acc={}'.format(max_acc)
         print 'Learning_rate={}, iter_num={}, batch_size={}, hidden_num={}, l2={}'.format(
             FLAGS.learning_rate,

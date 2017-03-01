@@ -228,13 +228,13 @@ def main(_):
             for test, num in get_batch_data(te_x, te_sen_len, te_x_bw, te_sen_len_bw, te_y, te_target_word, 2000, 1.0, 1.0, False):
                 if FLAGS.method == 'TD-ATT':
                     _loss, _acc, _summary, _step, _fw, _bw, _ty, _py = sess.run(
-                        [loss, acc_num, validate_summary_op, global_step, alpha_fw, alpha_bw, true_y, pred_y],
+                        [loss, acc_num, test_summary_op, global_step, alpha_fw, alpha_bw, true_y, pred_y],
                         feed_dict=test)
                     fw += list(_fw)
                     bw += list(_bw)
                 else:
                     _loss, _acc, _summary, _step, _ty, _py = sess.run(
-                        [loss, acc_num, validate_summary_op, global_step, true_y, pred_y],
+                        [loss, acc_num, test_summary_op, global_step, true_y, pred_y],
                         feed_dict=test)
                 ty += list(_ty)
                 py += list(_py)
