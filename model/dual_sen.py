@@ -57,7 +57,7 @@ def cnn(inputs, sen_len, keep_prob1, keep_prob2, _id='1'):
 
     outputs = (conv1 + conv2 + conv3) / 3.
 
-    return softmax_layer(outputs, FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+    return softmax_layer(outputs, FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, _id)
 
 
 def main_(_):
