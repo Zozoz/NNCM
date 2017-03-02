@@ -11,7 +11,7 @@ import numpy as np
 import tensorflow as tf
 
 from newbie_nn.config import *
-from newbie_nn.nn_layer import dynamic_rnn, bi_dynamic_rnn, softmax_layer
+from newbie_nn.nn_layer import cnn_layer, bi_dynamic_rnn, softmax_layer, reduce_mean_with_len
 from newbie_nn.att_layer import mlp_attention_layer
 from data_prepare.utils import load_w2v, batch_index, load_word_embedding, load_inputs_document_nohn
 
@@ -25,6 +25,29 @@ def bi_rnn(inputs, sen_len, keep_prob1, keep_prob2, id_='1'):
     cell = tf.nn.rnn_cell.LSTMCell
     hiddens = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, sen_len, FLAGS.max_sentence_len, 'sentence' + str(id_), FLAGS.t1)
     return softmax_layer(hiddens, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, id_)
+
+
+def cnn(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
+    inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
+    inputs = tf.reshape(inputs, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim, 1])
+
+    conv1 = cnn_layer(inputs, [3, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base, FLAGS.l2_reg, scope_name='conv1')
+    conv1 = tf.reshape(conv1, [-1, FLAGS.max_sentence_len - 2, FLAGS.n_hidden])
+    conv1 = reduce_mean_with_len(conv1, sen_len - 2)
+
+    conv2 = cnn_layer(inputs, [2, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base,
+                      FLAGS.l2_reg, scope_name='conv2')
+    conv2 = tf.reshape(conv2, [-1, FLAGS.max_sentence_len - 1, FLAGS.n_hidden])
+    conv2 = reduce_mean_with_len(conv2, sen_len - 1)
+
+    conv3 = cnn_layer(inputs, [1, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base,
+                      FLAGS.l2_reg, scope_name='conv3')
+    conv3 = tf.reshape(conv3, [-1, FLAGS.max_sentence_len - 0, FLAGS.n_hidden])
+    conv3 = reduce_mean_with_len(conv3, sen_len - 0)
+
+    outputs = (conv1 + conv2 + conv3) / 3.
+
+    return softmax_layer(outputs, FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, id_)
 
 
 def main(_):
@@ -41,9 +64,10 @@ def main(_):
 
     inputs = tf.nn.embedding_lookup(word_embedding, x)
 
-    prob = bi_rnn(inputs, sen_len, keep_prob1, keep_prob2, FLAGS.t1)
-
-    y_p = tf.argmax(prob, 1)
+    if FLAGS.method == 'CNN':
+        prob = cnn(inputs, sen_len, keep_prob1, keep_prob2, FLAGS.t1)
+    else:
+        prob = bi_rnn(inputs, sen_len, keep_prob1, keep_prob2, FLAGS.t1)
 
     loss = loss_func(y, prob)
     acc_num, acc_prob = acc_func(y, prob)
@@ -66,7 +90,6 @@ def main(_):
         import time
         timestamp = str(int(time.time()))
         _dir = 'summary/' + str(timestamp) + '_' + title
-        _dir = 'summary/' + FLAGS.train_file_path + '_' + str(timestamp) + '/'
         train_summary_op, test_summary_op, validate_summary_op, \
         train_summary_writer, test_summary_writer, validate_summary_writer = summary_func(loss, acc_prob, _dir, title, sess)
 
