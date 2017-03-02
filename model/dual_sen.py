@@ -28,6 +28,13 @@ def bi_rnn(inputs, sen_len, keep_prob1, keep_prob2, id_='1'):
     return softmax_layer(hiddens, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, id_)
 
 
+def pooling(inputs, dim=1, _type='max'):
+    if _type == 'max':
+        return tf.reduce_max(inputs, dim, False)
+    elif _type == 'avg':
+        return tf.reduce_mean(inputs, dim, False)
+
+
 def cnn(inputs, sen_len, keep_prob1, keep_prob2):
     print 'I am cnn.'
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
@@ -36,17 +43,17 @@ def cnn(inputs, sen_len, keep_prob1, keep_prob2):
     conv1 = cnn_layer(inputs, [3, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base,
                       FLAGS.l2_reg, scope_name='conv1')
     conv1 = tf.reshape(conv1, [-1, FLAGS.max_sentence_len - 2, FLAGS.n_hidden])
-    conv1 = reduce_mean_with_len(conv1, sen_len - 2)
+    conv1 = pooling(conv1, 1, 'max')
 
     conv2 = cnn_layer(inputs, [2, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base,
                       FLAGS.l2_reg, scope_name='conv2')
     conv2 = tf.reshape(conv2, [-1, FLAGS.max_sentence_len - 1, FLAGS.n_hidden])
-    conv2 = reduce_mean_with_len(conv2, sen_len - 1)
+    conv2 = pooling(conv2, 1, 'max')
 
     conv3 = cnn_layer(inputs, [1, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base,
                       FLAGS.l2_reg, scope_name='conv3')
     conv3 = tf.reshape(conv3, [-1, FLAGS.max_sentence_len - 0, FLAGS.n_hidden])
-    conv3 = reduce_mean_with_len(conv3, sen_len - 0)
+    conv3 = pooling(conv3, 1, 'max')
 
     outputs = (conv1 + conv2 + conv3) / 3.
 
