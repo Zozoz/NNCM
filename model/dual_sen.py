@@ -20,12 +20,12 @@ tf.app.flags.DEFINE_string('embedding_file_path_o', '', 'embedding file path')
 tf.app.flags.DEFINE_string('embedding_file_path_r', '', 'embedding file path')
 
 
-def bi_rnn(inputs, sen_len, keep_prob1, keep_prob2, id_='1'):
+def bi_rnn(inputs, sen_len, keep_prob1, keep_prob2, _id='1'):
     print 'I am bi-rnn.'
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
     cell = tf.nn.rnn_cell.LSTMCell
-    hiddens = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, sen_len, FLAGS.max_sentence_len, 'sentence' + str(id_), FLAGS.t1)
-    return softmax_layer(hiddens, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, id_)
+    hiddens = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, sen_len, FLAGS.max_sentence_len, 'sentence' + _id, FLAGS.t1)
+    return softmax_layer(hiddens, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, _id)
 
 
 def pooling(inputs, dim=1, _type='max'):
@@ -35,7 +35,7 @@ def pooling(inputs, dim=1, _type='max'):
         return tf.reduce_mean(inputs, dim, False)
 
 
-def cnn(inputs, sen_len, keep_prob1, keep_prob2):
+def cnn(inputs, sen_len, keep_prob1, keep_prob2, _id='1'):
     print 'I am cnn.'
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
     inputs = tf.reshape(inputs, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim, 1])
@@ -60,7 +60,7 @@ def cnn(inputs, sen_len, keep_prob1, keep_prob2):
     return softmax_layer(outputs, FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
 
 
-def main(_):
+def main_(_):
     word_id_mapping, w2v = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
     word_embedding = tf.constant(w2v, dtype=tf.float32, name='word_embedding')
 
@@ -177,7 +177,7 @@ def main(_):
         )
 
 
-def main_(_):
+def main(_):
     word_id_mapping_o, w2v_o = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
     word_embedding_o = tf.constant(w2v_o, dtype=tf.float32)
     word_id_mapping_r, w2v_r = load_w2v(FLAGS.embedding_file_path_r, FLAGS.embedding_dim, True)
@@ -195,11 +195,17 @@ def main_(_):
     with tf.device('/gpu:0'):
         inputs_o = tf.nn.embedding_lookup(word_embedding_o, x_o)
         inputs_o = tf.reshape(inputs_o, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
-        prob_o = bi_rnn(inputs_o, len_o, keep_prob1, keep_prob2, 'o')
+        if FLAGS.method == 'CNN':
+            prob_o = cnn(inputs_o, len_o, keep_prob1, keep_prob2, 'o')
+        else:
+            prob_o = bi_rnn(inputs_o, len_o, keep_prob1, keep_prob2, 'o')
     with tf.device('/gpu:1'):
         inputs_r = tf.nn.embedding_lookup(word_embedding_r, x_r)
         inputs_r = tf.reshape(inputs_r, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
-        prob_r = bi_rnn(inputs_r, len_r, keep_prob1, keep_prob2, 'r')
+        if FLAGS.method == 'CNN':
+            prob_r = cnn(inputs_r, len_r, keep_prob1, keep_prob2, 'r')
+        else:
+            prob_r = bi_rnn(inputs_r, len_r, keep_prob1, keep_prob2, 'r')
 
     r_y = tf.reverse(y, [False, True])
     reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
