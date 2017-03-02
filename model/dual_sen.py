@@ -27,11 +27,12 @@ def bi_rnn(inputs, sen_len, keep_prob1, keep_prob2, id_='1'):
     return softmax_layer(hiddens, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, id_)
 
 
-def cnn(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
+def cnn(inputs, sen_len, keep_prob1, keep_prob2):
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
     inputs = tf.reshape(inputs, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim, 1])
 
-    conv1 = cnn_layer(inputs, [3, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base, FLAGS.l2_reg, scope_name='conv1')
+    conv1 = cnn_layer(inputs, [3, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base,
+                      FLAGS.l2_reg, scope_name='conv1')
     conv1 = tf.reshape(conv1, [-1, FLAGS.max_sentence_len - 2, FLAGS.n_hidden])
     conv1 = reduce_mean_with_len(conv1, sen_len - 2)
 
@@ -47,7 +48,7 @@ def cnn(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
 
     outputs = (conv1 + conv2 + conv3) / 3.
 
-    return softmax_layer(outputs, FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, id_)
+    return softmax_layer(outputs, FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
 
 
 def main(_):
@@ -65,9 +66,9 @@ def main(_):
     inputs = tf.nn.embedding_lookup(word_embedding, x)
 
     if FLAGS.method == 'CNN':
-        prob = cnn(inputs, sen_len, keep_prob1, keep_prob2, FLAGS.t1)
+        prob = cnn(inputs, sen_len, keep_prob1, keep_prob2)
     else:
-        prob = bi_rnn(inputs, sen_len, keep_prob1, keep_prob2, FLAGS.t1)
+        prob = bi_rnn(inputs, sen_len, keep_prob1, keep_prob2)
 
     loss = loss_func(y, prob)
     acc_num, acc_prob = acc_func(y, prob)
