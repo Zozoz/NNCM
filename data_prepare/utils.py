@@ -318,12 +318,12 @@ def load_inputs_document_nohn(input_file, word_id_file, max_sen_len, _type=None,
         line = line.lower().decode('utf8', 'ignore').split('||')
         words = ' '.join(line[1:]).split()
         i = 0
-        tx = [0]
+        tx = []
         for word in words:
             if i < max_sen_len:
                 if word in word_to_id:
                     tx.append(word_to_id[word])
-            i += 1
+                    i += 1
         sen_len.append(i)
         x.append(tx + [0] * (max_sen_len - i))
         y.append(line[0])

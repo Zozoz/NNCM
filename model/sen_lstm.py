@@ -67,8 +67,8 @@ def main(_):
         train_summary_op, test_summary_op, validate_summary_op, \
         train_summary_writer, test_summary_writer, validate_summary_writer = summary_func(loss, acc_prob, _dir, title, sess)
 
-        save_dir = 'model/' + str(timestamp) + '_' + title + '/'
-        save_dir = 'model/' + FLAGS.train_file_path + '/'
+        save_dir = 'temp_model/' + str(timestamp) + '_' + title + '/'
+        save_dir = 'temp_model/' + FLAGS.train_file_path + '/'
         saver = saver_func(save_dir)
 
         init = tf.initialize_all_variables()
