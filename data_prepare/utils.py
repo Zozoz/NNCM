@@ -306,6 +306,30 @@ def load_inputs_document(input_file, word_id_file, max_sen_len, max_doc_len, _ty
     return np.asarray(x), np.asarray(y), np.asarray(sen_len), np.asarray(doc_len)
 
 
+def load_inputs_document_nohn(input_file, word_id_file, max_sen_len, _type=None, encoding='utf8'):
+    if type(word_id_file) is str:
+        word_to_id = load_word_id_mapping(word_id_file)
+    else:
+        word_to_id = word_id_file
+    print 'load word-to-id done!'
 
+    x, y, sen_len = [], [], []
+    for line in open(input_file):
+        line = line.lower().decode('utf8', 'ignore').split('||')
+        words = ' '.join(line[1:]).split()
+        i = 0
+        tx = [0]
+        for word in words:
+            if i < max_sen_len:
+                if word in word_to_id:
+                    tx.append(word_to_id[word])
+            i += 1
+        sen_len.append(i)
+        x.append(tx + [0] * (max_sen_len - i))
+        y.append(line[0])
 
+    y = change_y_to_onehot(y)
+    print 'load input {} done!'.format(input_file)
+
+    return np.asarray(x), np.asarray(y), np.asarray(sen_len)
 
