@@ -264,7 +264,7 @@ def load_inputs_document(input_file, word_id_file, max_sen_len, max_doc_len, _ty
     x, y, sen_len, doc_len = [], [], [], []
     for line in open(input_file):
         line = line.lower().decode('utf8', 'ignore').split('||')
-        y.append(line[0])
+        # y.append(line[0])
 
         t_sen_len = [0] * max_doc_len
         t_x = np.zeros((max_doc_len, max_sen_len))
@@ -272,6 +272,7 @@ def load_inputs_document(input_file, word_id_file, max_sen_len, max_doc_len, _ty
         sentences = doc.split('<sssss>')
         i = 0
         pre = ''
+        flag = False
         for sentence in sentences:
             j = 0
             if _type == 'CNN':
@@ -290,12 +291,14 @@ def load_inputs_document(input_file, word_id_file, max_sen_len, max_doc_len, _ty
                     break
             t_sen_len[i] = j
             i += 1
+            flag = True
             if i >= max_doc_len:
                 break
-
-        doc_len.append(i)
-        sen_len.append(t_sen_len)
-        x.append(t_x)
+        if flag:
+            doc_len.append(i)
+            sen_len.append(t_sen_len)
+            x.append(t_x)
+            y.append(line[0])
 
     y = change_y_to_onehot(y)
     print 'load input {} done!'.format(input_file)
