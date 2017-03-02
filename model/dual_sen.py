@@ -21,6 +21,7 @@ tf.app.flags.DEFINE_string('embedding_file_path_r', '', 'embedding file path')
 
 
 def bi_rnn(inputs, sen_len, keep_prob1, keep_prob2, id_='1'):
+    print 'I am bi-rnn.'
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
     cell = tf.nn.rnn_cell.LSTMCell
     hiddens = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, sen_len, FLAGS.max_sentence_len, 'sentence' + str(id_), FLAGS.t1)
@@ -28,6 +29,7 @@ def bi_rnn(inputs, sen_len, keep_prob1, keep_prob2, id_='1'):
 
 
 def cnn(inputs, sen_len, keep_prob1, keep_prob2):
+    print 'I am cnn.'
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
     inputs = tf.reshape(inputs, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim, 1])
 
