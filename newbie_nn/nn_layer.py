@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 
-def cnn_layer(inputs, filter_size, strides, padding, random_base, l2_reg, scope_name="conv"):
+def cnn_layer(inputs, filter_size, strides, padding, random_base, l2_reg, active_func=None, scope_name="conv"):
     w = tf.get_variable(
         name='conv' + scope_name,
         shape=filter_size,
@@ -24,7 +24,9 @@ def cnn_layer(inputs, filter_size, strides, padding, random_base, l2_reg, scope_
         regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
     )
     x = tf.nn.conv2d(inputs, w, strides, padding) + b
-    return x
+    if active_func is None:
+        active_func = tf.nn.relu
+    return active_func(x)
 
 
 def dynamic_rnn(cell, inputs, n_hidden, length, max_len, scope_name, out_type='last'):
