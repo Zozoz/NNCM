@@ -41,17 +41,17 @@ def cnn(inputs, sen_len, keep_prob1, keep_prob2, _id='1'):
     inputs = tf.reshape(inputs, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim, 1])
 
     conv1 = cnn_layer(inputs, [3, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base,
-                      FLAGS.l2_reg, scope_name='conv1')
+                      FLAGS.l2_reg, scope_name='conv1'+_id)
     conv1 = tf.reshape(conv1, [-1, FLAGS.max_sentence_len - 2, FLAGS.n_hidden])
     conv1 = pooling(conv1, 1, 'max')
 
     conv2 = cnn_layer(inputs, [2, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base,
-                      FLAGS.l2_reg, scope_name='conv2')
+                      FLAGS.l2_reg, scope_name='conv2'+_id)
     conv2 = tf.reshape(conv2, [-1, FLAGS.max_sentence_len - 1, FLAGS.n_hidden])
     conv2 = pooling(conv2, 1, 'max')
 
     conv3 = cnn_layer(inputs, [1, FLAGS.embedding_dim, 1, FLAGS.n_hidden], [1, 1, 1, 1], 'VALID', FLAGS.random_base,
-                      FLAGS.l2_reg, scope_name='conv3')
+                      FLAGS.l2_reg, scope_name='conv3'+_id)
     conv3 = tf.reshape(conv3, [-1, FLAGS.max_sentence_len - 0, FLAGS.n_hidden])
     conv3 = pooling(conv3, 1, 'max')
 
