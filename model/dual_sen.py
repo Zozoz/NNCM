@@ -77,12 +77,12 @@ def main(_):
         sess.run(init)
 
 
-        tr_x, tr_sen_len, tr_y = load_inputs_document_nohn(
+        tr_x, tr_y, tr_sen_len = load_inputs_document_nohn(
             FLAGS.train_file_path,
             word_id_mapping,
             FLAGS.max_sentence_len
         )
-        te_x, te_sen_len, te_y = load_inputs_document_nohn(
+        te_x, te_y, te_sen_len = load_inputs_document_nohn(
             FLAGS.test_file_path,
             word_id_mapping,
             FLAGS.max_sentence_len
