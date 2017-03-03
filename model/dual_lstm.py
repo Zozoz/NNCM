@@ -102,8 +102,10 @@ def main(_):
         import time
         timestamp = str(int(time.time()))
         _dir = 'summary/' + str(timestamp) + '_' + title
-        train_summary_op, test_summary_op, validate_summary_op, \
-        train_summary_writer, test_summary_writer, validate_summary_writer = summary_func(loss, acc_prob, _dir, title, sess)
+        test_loss = tf.placeholder(tf.float32)
+        test_acc = tf.placeholder(tf.float32)
+        train_summary_op, test_summary_op, validate_summary_op, train_summary_writer, test_summary_writer, \
+        validate_summary_writer = summary_func(loss, acc_prob, test_loss, test_acc, _dir, title, sess)
 
         save_dir = 'temp_model/' + str(timestamp) + '_' + title + '/'
         saver = saver_func(save_dir)
@@ -166,8 +168,7 @@ def main(_):
                 }
                 yield feed_dict, len(index)
 
-        max_acc = 0.
-        max_prob = None
+        max_acc, max_prob, step = 0., None, None
         for i in xrange(FLAGS.n_iter):
             for train, _ in get_batch_data(tr_x, tr_sen_len, tr_doc_len, tr_x_r, tr_sen_len_r, tr_doc_len_r, tr_y,
                                            FLAGS.batch_size, FLAGS.keep_prob1, FLAGS.keep_prob2):
@@ -176,28 +177,23 @@ def main(_):
                 # embed_update = tf.assign(word_embedding, tf.concat(0, [tf.zeros([1, FLAGS.embedding_dim]), word_embedding[1:]]))
                 # sess.run(embed_update)
 
-            acc, cost, cnt = 0., 0., 0
-            flag = True
-            summary, step = None, None
-            p = []
+            saver.save(sess, save_dir, global_step=step)
+
+            acc, cost, cnt, p = 0., 0., 0, []
             for test, num in get_batch_data(te_x, te_sen_len, te_doc_len, te_x_r, te_sen_len_r, te_doc_len_r, te_y, 2000, 1.0, 1.0, False):
-                _loss, _acc, _summary, _step, _p = sess.run(
-                    [loss, acc_num, test_summary_op, global_step, prob],
-                    feed_dict=test)
+                _loss, _acc, _p = sess.run([loss, acc_num, prob], feed_dict=test)
                 p += list(_p)
                 acc += _acc
                 cost += _loss * num
                 cnt += num
-                if flag:
-                    summary = _summary
-                    step = _step
-                    flag = False
             print 'all samples={}, correct prediction={}'.format(cnt, acc)
+            acc = acc / cnt
+            cost = cost / cnt
+            print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(i, cost, acc)
+            summary = sess.run(test_summary_op, feed_dict={test_loss: cost, test_acc: acc})
             test_summary_writer.add_summary(summary, step)
-            saver.save(sess, save_dir, global_step=step)
-            print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(i, cost / cnt, acc / cnt)
-            if acc / cnt > max_acc:
-                max_acc = acc / cnt
+            if acc > max_acc:
+                max_acc = acc
                 max_prob = p
 
         fp = open(FLAGS.prob_file, 'w')
