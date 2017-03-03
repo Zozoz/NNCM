@@ -150,9 +150,7 @@ def main(_):
             saver.save(sess, save_dir, global_step=step)
 
             acc, cost, cnt = 0., 0., 0
-            p = []
-            summary, step = None, None
-            ty, py = [], []
+            p, ty, py = [], [], []
             alpha_s, alpha_d = [], []
             for test, num in get_batch_data(te_x, te_y, te_sen_len, te_doc_len, 2000, 1.0, 1.0, False):
                 if FLAGS.method == 'ATT':
