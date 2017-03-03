@@ -246,8 +246,8 @@ def main(_):
             print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(i, cost, acc)
             summary = sess.run(test_summary_op, feed_dict={test_loss: cost, test_acc: acc})
             test_summary_writer.add_summary(summary, step)
-            if acc / cnt > max_acc:
-                max_acc = acc / cnt
+            if acc > max_acc:
+                max_acc = acc
                 max_fw = fw
                 max_bw = bw
                 max_ty = ty
