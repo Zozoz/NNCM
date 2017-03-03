@@ -65,12 +65,14 @@ def train_func(loss, r, global_step, optimizer=None):
         # optimizer = tf.train.AdagradOptimizer(learning_rate=r).minimize(loss, global_step=global_step)
 
 
-def summary_func(loss, acc, _dir, title, sess):
+def summary_func(loss, acc, test_loss, test_acc, _dir, title, sess):
     summary_loss = tf.scalar_summary('loss' + title, loss)
     summary_acc = tf.scalar_summary('acc' + title, acc)
+    test_summary_loss = tf.scalar_summary('loss' + title, test_loss)
+    test_summary_acc = tf.scalar_summary('acc' + title, test_acc)
     train_summary_op = tf.merge_summary([summary_loss, summary_acc])
     validate_summary_op = tf.merge_summary([summary_loss, summary_acc])
-    test_summary_op = tf.merge_summary([summary_loss, summary_acc])
+    test_summary_op = tf.merge_summary([test_summary_loss, test_summary_acc])
     train_summary_writer = tf.train.SummaryWriter(_dir + '/train', sess.graph)
     test_summary_writer = tf.train.SummaryWriter(_dir + '/test', sess.graph)
     validate_summary_writer = tf.train.SummaryWriter(_dir + '/validate', sess.graph)
@@ -79,7 +81,7 @@ def summary_func(loss, acc, _dir, title, sess):
 
 
 def saver_func(_dir):
-    saver = tf.train.Saver(write_version=tf.train.SaverDef.V2, max_to_keep=1000)
+    saver = tf.train.Saver(write_version=tf.train.SaverDef.V2, max_to_keep=10)
     import os
     if not os.path.exists(_dir):
         os.makedirs(_dir)
