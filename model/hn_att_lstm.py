@@ -13,7 +13,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score
 
 from newbie_nn.config import *
 from newbie_nn.nn_layer import dynamic_rnn, bi_dynamic_rnn, softmax_layer
-from newbie_nn.att_layer import mlp_attention_layer
+from newbie_nn.att_layer import mlp_attention_layer, Mlp_attention_layer
 from data_prepare.utils import load_w2v, batch_index, load_word_embedding, load_inputs_document
 
 
@@ -22,11 +22,11 @@ def hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
     cell = tf.nn.rnn_cell.LSTMCell
     sen_len = tf.reshape(sen_len, [-1])
     hiddens_sen = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, sen_len, FLAGS.max_sentence_len, 'sentence', 'all')
-    alpha_sen = mlp_attention_layer(hiddens_sen, sen_len, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 1)
+    alpha_sen = Mlp_attention_layer(hiddens_sen, sen_len, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 1)
     outputs_sen = tf.reshape(tf.batch_matmul(alpha_sen, hiddens_sen), [-1, FLAGS.max_doc_len, 2 * FLAGS.n_hidden])
 
     hiddens_doc = bi_dynamic_rnn(cell, outputs_sen, FLAGS.n_hidden, doc_len, FLAGS.max_doc_len, 'doc', 'all')
-    alpha_doc = mlp_attention_layer(hiddens_doc, doc_len, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 2)
+    alpha_doc = Mlp_attention_layer(hiddens_doc, doc_len, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 2)
     outputs_doc = tf.reshape(tf.batch_matmul(alpha_doc, hiddens_doc), [-1, 2 * FLAGS.n_hidden])
 
     prob = softmax_layer(outputs_doc, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
