@@ -25,7 +25,7 @@ def bi_rnn_att(inputs, sen_len, keep_prob1, keep_prob2, _id='1'):
     cell = tf.nn.rnn_cell.LSTMCell
     hiddens_sen = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, sen_len, FLAGS.max_sentence_len, _id, 'all')
     alpha_sen = mlp_attention_layer(hiddens_sen, sen_len, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, _id)
-    outputs_sen = tf.batch_matmul(alpha_sen, hiddens_sen)
+    outputs_sen = tf.squeeze(tf.batch_matmul(alpha_sen, hiddens_sen))
 
     return softmax_layer(outputs_sen, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
 
