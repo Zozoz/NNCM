@@ -72,8 +72,10 @@ def main(_):
         import time
         timestamp = str(int(time.time()))
         _dir = 'summary/' + str(timestamp) + '_cnn'
-        train_summary_op, test_summary_op, validate_summary_op, \
-        train_summary_writer, test_summary_writer, validate_summary_writer = summary_func(loss, acc_prob, _dir, '', sess)
+        test_loss = tf.placeholder(tf.float32)
+        test_acc = tf.placeholder(tf.float32)
+        train_summary_op, test_summary_op, validate_summary_op, train_summary_writer, test_summary_writer, \
+        validate_summary_writer = summary_func(loss, acc_prob, test_loss, test_acc, _dir, title, sess)
 
         save_dir = 'temp_model/' + str(timestamp) + '_cnn' + '/'
         saver = saver_func(save_dir)
@@ -119,6 +121,7 @@ def main(_):
 
         max_acc = 0.
         max_prob, max_ty, max_py = None, None, None
+        step = None
         for i in xrange(FLAGS.n_iter):
             for train, _ in get_batch_data(tr_x, tr_y, tr_sen_len, tr_doc_len, FLAGS.batch_size,
                                            FLAGS.keep_prob1, FLAGS.keep_prob2):
@@ -126,10 +129,7 @@ def main(_):
                 train_summary_writer.add_summary(summary, step)
 
             acc, cost, cnt = 0., 0., 0
-            flag = True
-            p = []
-            summary, step = None, None
-            ty, py = [], []
+            p, ty, py = [], [], []
             for test, num in get_batch_data(te_x, te_y, te_sen_len, te_doc_len, 2000, 1.0, 1.0, False):
                 _loss, _acc, _summary, _step, _p, _ty, _py = sess.run(
                     [loss, acc_num, test_summary_op, global_step, prob, true_y, pred_y],
@@ -140,16 +140,14 @@ def main(_):
                 acc += _acc
                 cost += _loss * num
                 cnt += num
-                if flag:
-                    summary = _summary
-                    step = _step
-                    flag = False
             print 'all samples={}, correct prediction={}'.format(cnt, acc)
+            acc = acc / cnt
+            cost = cost / cnt
+            print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(i, cost, acc)
+            summary = sess.run(test_summary_op, feed_dict={test_loss: cost, test_acc: acc})
             test_summary_writer.add_summary(summary, step)
-            saver.save(sess, save_dir, global_step=step)
-            print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(i, cost / cnt, acc / cnt)
-            if acc / cnt > max_acc:
-                max_acc = acc / cnt
+            if acc > max_acc:
+                max_acc = acc
                 max_prob = p
                 max_ty = ty
                 max_py = py

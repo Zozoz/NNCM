@@ -64,8 +64,10 @@ def main(_):
         timestamp = str(int(time.time()))
         _dir = 'summary/' + str(timestamp) + '_' + title
         _dir = 'summary/' + FLAGS.train_file_path + '_' + str(timestamp) + '/'
-        train_summary_op, test_summary_op, validate_summary_op, \
-        train_summary_writer, test_summary_writer, validate_summary_writer = summary_func(loss, acc_prob, _dir, title, sess)
+        test_loss = tf.placeholder(tf.float32)
+        test_acc = tf.placeholder(tf.float32)
+        train_summary_op, test_summary_op, validate_summary_op, train_summary_writer, test_summary_writer, \
+        validate_summary_writer = summary_func(loss, acc_prob, test_loss, test_acc, _dir, title, sess)
 
         save_dir = 'temp_model/' + str(timestamp) + '_' + title + '/'
         save_dir = 'temp_model/' + FLAGS.train_file_path + '/'
@@ -97,9 +99,8 @@ def main(_):
                 }
                 yield feed_dict, len(index)
 
-        max_acc = 0.
+        max_acc, max_prob = 0., []
         for i in xrange(FLAGS.n_iter):
-            step = None
             for train, _ in get_batch_data(tr_x, tr_sen_len, tr_y, FLAGS.batch_size,
                                                 FLAGS.keep_prob1, FLAGS.keep_prob2):
                 _, step, summary = sess.run([optimizer, global_step, train_summary_op], feed_dict=train)
@@ -108,8 +109,6 @@ def main(_):
                     saver.save(sess, save_dir, global_step=step)
                 if step % FLAGS.display_step == 0:
                     acc, cost, cnt = 0., 0., 0
-                    flag = True
-                    summary = None
                     y_prob = []
                     y_pred = []
                     for test, num in get_batch_data(te_x, te_sen_len, te_y, 2200, 1.0, 1.0, False):
@@ -121,19 +120,18 @@ def main(_):
                         acc += _acc
                         cost += _loss * num
                         cnt += num
-                        if flag:
-                            summary = _summary
-                            flag = False
+                    print 'all samples={}, correct prediction={}'.format(cnt, acc)
+                    acc = acc / cnt
+                    cost = cost / cnt
+                    print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}'.format(i, cost, acc)
+                    summary = sess.run(test_summary_op, feed_dict={test_loss: cost, test_acc: acc})
                     test_summary_writer.add_summary(summary, step)
-                    saver.save(sess, save_dir, global_step=step)
-                    print 'Iter {}: mini-batch loss={:.6f}, test acc={:.6f}\n'.format(step, cost / cnt, acc / cnt)
-                    if acc / cnt > max_acc:
-                        max_acc = acc / cnt
-                    if step == 2500:
-                        fp = open(FLAGS.prob_file, 'w')
-                        for pb in y_prob:
-                            fp.write(str(pb[0]) + ' ' + str(pb[1]) + '\n')
-                        break
+                    if acc > max_acc:
+                        max_acc = acc
+                        max_prob = y_prob
+        fp = open(FLAGS.prob_file, 'w')
+        for pb in max_prob:
+            fp.write(str(pb[0]) + ' ' + str(pb[1]) + '\n')
         print 'Optimization Finished! Max acc={}'.format(max_acc)
         print 'Learning_rate={}, iter_num={}, batch_size={}, hidden_num={}, l2={}'.format(
             FLAGS.learning_rate,
