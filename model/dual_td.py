@@ -91,22 +91,22 @@ def main(_):
 
         # saver.restore(sess, '/-')
 
-        tr_x, tr_y, tr_sen_len = load_inputs_twitter(
+        tr_x, tr_sen_len, tr_y = load_inputs_twitter(
             FLAGS.train_file_path,
             word_id_mapping_o,
             FLAGS.max_sentence_len
         )
-        te_x, te_y, te_sen_len = load_inputs_twitter(
+        te_x, te_sen_len, te_y = load_inputs_twitter(
             FLAGS.test_file_path,
             word_id_mapping_o,
             FLAGS.max_sentence_len
         )
-        tr_x_r, tr_y_r, tr_sen_len_r = load_inputs_twitter(
+        tr_x_r, tr_sen_len_r, tr_y_r = load_inputs_twitter(
             FLAGS.train_file_path_r,
             word_id_mapping_r,
             FLAGS.max_sentence_len
         )
-        te_x_r, te_y_r, te_sen_len_r = load_inputs_twitter(
+        te_x_r, te_sen_len_r, te_y_r = load_inputs_twitter(
             FLAGS.test_file_path_r,
             word_id_mapping_r,
             FLAGS.max_sentence_len
