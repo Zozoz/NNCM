@@ -131,9 +131,7 @@ def main(_):
             acc, cost, cnt = 0., 0., 0
             p, ty, py = [], [], []
             for test, num in get_batch_data(te_x, te_y, te_sen_len, te_doc_len, 2000, 1.0, 1.0, False):
-                _loss, _acc, _summary, _step, _p, _ty, _py = sess.run(
-                    [loss, acc_num, test_summary_op, global_step, prob, true_y, pred_y],
-                    feed_dict=test)
+                _loss, _acc, _p, _ty, _py = sess.run([loss, acc_num, prob, true_y, pred_y], feed_dict=test)
                 p += list(_p)
                 ty += list(_ty)
                 py += list(_py)
