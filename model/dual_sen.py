@@ -111,7 +111,6 @@ def main(_):
         init = tf.initialize_all_variables()
         sess.run(init)
 
-
         tr_x, tr_sen_len, tr_y = load_inputs_twitter(
             FLAGS.train_file_path,
             word_id_mapping,

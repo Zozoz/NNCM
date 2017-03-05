@@ -20,28 +20,27 @@ tf.app.flags.DEFINE_string('embedding_file_path_o', '', 'embedding file path')
 tf.app.flags.DEFINE_string('embedding_file_path_r', '', 'embedding file path')
 
 
-def hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
+def hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2, _id='1'):
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
     cell = tf.nn.rnn_cell.LSTMCell
     sen_len = tf.reshape(sen_len, [-1])
-    hiddens_sen = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, sen_len, FLAGS.max_sentence_len, 'sentence', 'all')
+    hiddens_sen = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, sen_len, FLAGS.max_sentence_len, 'sentence' + _id, 'all')
     alpha_sen = mlp_attention_layer(hiddens_sen, sen_len, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 1)
     outputs_sen = tf.reshape(tf.batch_matmul(alpha_sen, hiddens_sen), [-1, FLAGS.max_doc_len, 2 * FLAGS.n_hidden])
 
-    hiddens_doc = bi_dynamic_rnn(cell, outputs_sen, FLAGS.n_hidden, doc_len, FLAGS.max_doc_len, 'doc', 'all')
+    hiddens_doc = bi_dynamic_rnn(cell, outputs_sen, FLAGS.n_hidden, doc_len, FLAGS.max_doc_len, 'doc' + _id, 'all')
     alpha_doc = mlp_attention_layer(hiddens_doc, doc_len, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 2)
     outputs_doc = tf.reshape(tf.batch_matmul(alpha_doc, hiddens_doc), [-1, 2 * FLAGS.n_hidden])
+    return outputs_doc
 
-    return softmax_layer(outputs_doc, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
 
-
-def hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2, id_=1):
+def hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2, _id='1'):
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
     cell = tf.nn.rnn_cell.LSTMCell
     sen_len = tf.reshape(sen_len, [-1])
-    hiddens_sen = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, sen_len, FLAGS.max_sentence_len, 'sentence' + str(id_), FLAGS.t1)
+    hiddens_sen = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, sen_len, FLAGS.max_sentence_len, 'sentence' + _id, FLAGS.t1)
     hiddens_sen = tf.reshape(hiddens_sen, [-1, FLAGS.max_doc_len, 2 * FLAGS.n_hidden])
-    hidden_doc = bi_dynamic_rnn(cell, hiddens_sen, FLAGS.n_hidden, doc_len, FLAGS.max_doc_len, 'doc' + str(id_), FLAGS.t2)
+    hidden_doc = bi_dynamic_rnn(cell, hiddens_sen, FLAGS.n_hidden, doc_len, FLAGS.max_doc_len, 'doc' + _id, FLAGS.t2)
     return hidden_doc
 
 
@@ -65,12 +64,18 @@ def main(_):
     with tf.device('/gpu:0'):
         inputs_o = tf.nn.embedding_lookup(word_embedding_o, x_o)
         inputs_o = tf.reshape(inputs_o, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
-        h_o = hn(inputs_o, sen_len_o, doc_len_o, keep_prob1, keep_prob2, 1)
+        if FLAGS.method == 'ATT':
+            h_o = hn_att(inputs_o, sen_len_o, doc_len_o, keep_prob1, keep_prob2, 'o')
+        else:
+            h_o = hn(inputs_o, sen_len_o, doc_len_o, keep_prob1, keep_prob2, 'o')
         prob_o = softmax_layer(h_o, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, 'o')
     with tf.device('/gpu:1'):
         inputs_r = tf.nn.embedding_lookup(word_embedding_r, x_r)
         inputs_r = tf.reshape(inputs_r, [-1, FLAGS.max_sentence_len, FLAGS.embedding_dim])
-        h_r = hn(inputs_r, sen_len_r, doc_len_r, keep_prob1, keep_prob2, 2)
+        if FLAGS.method == 'ATT':
+            h_r = hn_att(inputs_r, sen_len_r, doc_len_r, keep_prob1, keep_prob2, 'r')
+        else:
+            h_r = hn(inputs_r, sen_len_r, doc_len_r, keep_prob1, keep_prob2, 'r')
         prob_r = softmax_layer(h_r, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, 'r')
 
 
