@@ -13,7 +13,7 @@ import tensorflow as tf
 from newbie_nn.config import *
 from newbie_nn.nn_layer import cnn_layer, bi_dynamic_rnn, softmax_layer, reduce_mean_with_len
 from newbie_nn.att_layer import mlp_attention_layer
-from data_prepare.utils import load_w2v, batch_index, load_word_embedding, load_inputs_document_nohn
+from data_prepare.utils import load_w2v, batch_index, load_inputs_twitter, load_inputs_document_nohn
 
 tf.app.flags.DEFINE_float('alpha', 0.6, 'learning rate')
 tf.app.flags.DEFINE_string('embedding_file_path_o', '', 'embedding file path')
@@ -60,7 +60,7 @@ def cnn(inputs, sen_len, keep_prob1, keep_prob2, _id='1'):
     return softmax_layer(outputs, FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class, _id)
 
 
-def main_(_):
+def main(_):
     word_id_mapping, w2v = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
     word_embedding = tf.constant(w2v, dtype=tf.float32, name='word_embedding')
 
@@ -112,12 +112,12 @@ def main_(_):
         sess.run(init)
 
 
-        tr_x, tr_y, tr_sen_len = load_inputs_document_nohn(
+        tr_x, tr_sen_len, tr_y = load_inputs_twitter(
             FLAGS.train_file_path,
             word_id_mapping,
             FLAGS.max_sentence_len
         )
-        te_x, te_y, te_sen_len = load_inputs_document_nohn(
+        te_x, te_sen_len, te_y = load_inputs_twitter(
             FLAGS.test_file_path,
             word_id_mapping,
             FLAGS.max_sentence_len
@@ -172,7 +172,7 @@ def main_(_):
         )
 
 
-def main(_):
+def main_(_):
     word_id_mapping_o, w2v_o = load_w2v(FLAGS.embedding_file_path_o, FLAGS.embedding_dim, True)
     word_embedding_o = tf.constant(w2v_o, dtype=tf.float32)
     word_id_mapping_r, w2v_r = load_w2v(FLAGS.embedding_file_path_r, FLAGS.embedding_dim, True)
