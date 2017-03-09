@@ -25,6 +25,9 @@ def hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
     alpha_sen = Mlp_attention_layer(hiddens_sen, sen_len, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 1)
     outputs_sen = tf.reshape(tf.batch_matmul(alpha_sen, hiddens_sen), [-1, FLAGS.max_doc_len, 2 * FLAGS.n_hidden])
 
+    alpha = 1.0 - tf.reshape(sen_len / tf.reduce_sum(sen_len, 1, keep_dims=True), [None, FLAGS.max_doc_len, 1])
+    outputs_sen = alpha * outputs_sen
+
     hiddens_doc = bi_dynamic_rnn(cell, outputs_sen, FLAGS.n_hidden, doc_len, FLAGS.max_doc_len, 'doc', 'all')
     alpha_doc = Mlp_attention_layer(hiddens_doc, doc_len, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 2)
     outputs_doc = tf.reshape(tf.batch_matmul(alpha_doc, hiddens_doc), [-1, 2 * FLAGS.n_hidden])
