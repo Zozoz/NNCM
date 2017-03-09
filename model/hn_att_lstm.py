@@ -26,7 +26,7 @@ def hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
     outputs_sen = tf.reshape(tf.batch_matmul(alpha_sen, hiddens_sen), [-1, FLAGS.max_doc_len, 2 * FLAGS.n_hidden])
 
     sen_len = tf.reshape(sen_len, [-1, FLAGS.max_doc_len])
-    alpha = 1.0 - tf.cast(tf.reshape(sen_len / (tf.reduce_sum(sen_len, 1, keep_dims=True) + 1), [None, FLAGS.max_doc_len, 1]), tf.float32)
+    alpha = 1.0 - tf.cast(tf.reshape(sen_len / (tf.reduce_sum(sen_len, 1, keep_dims=True) + 1), [-1, FLAGS.max_doc_len, 1]), tf.float32)
     outputs_new = alpha * outputs_sen
 
     hiddens_doc = bi_dynamic_rnn(cell, outputs_new, FLAGS.n_hidden, doc_len, FLAGS.max_doc_len, 'doc', 'all')
@@ -154,9 +154,8 @@ def main(_):
                 # sess.run(embed_update)
 
             fp = open('train_alpha_sen_' + FLAGS.prob_file, 'w')
-            for doc in train_alpha_doc:
-                for item in doc:
-                    fp.write(' '.join([str(it) for it in item]) + '\n')
+            for item in train_alpha_doc:
+                fp.write(' '.join([str(it) for it in item]) + '\n')
 
             # saver.save(sess, save_dir, global_step=step)
 
