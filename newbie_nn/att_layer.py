@@ -92,6 +92,13 @@ def mlp_attention_layer(inputs, length, n_hidden, l2_reg, random_base, layer_id=
         # initializer=tf.random_uniform_initializer(-np.sqrt(6.0 / (n_hidden + n_hidden)), np.sqrt(6.0 / (n_hidden + n_hidden))),
         regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
     )
+    b = tf.get_variable(
+        name='att_b' + str(layer_id),
+        shape=[n_hidden],
+        initializer=tf.random_normal_initializer(mean=0.0, stddev=np.sqrt(2. / (n_hidden + n_hidden))),
+        # initializer=tf.random_uniform_initializer(-random_base, random_base),
+        regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
+    )
     u = tf.get_variable(
         name='att_u_' + str(layer_id),
         shape=[n_hidden, 1],
@@ -101,7 +108,7 @@ def mlp_attention_layer(inputs, length, n_hidden, l2_reg, random_base, layer_id=
         regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
     )
     inputs = tf.reshape(inputs, [-1, n_hidden])
-    tmp = tf.tanh(tf.matmul(inputs, w))
+    tmp = tf.tanh(tf.matmul(inputs, w) + b)
     tmp = tf.reshape(tf.matmul(tmp, u), [batch_size, 1, max_len])
     alpha = softmax_with_len(tmp, length, max_len)
     return alpha
