@@ -19,11 +19,11 @@ def ian(inputs_l, len_l, inputs_r, len_r, keep_prob1, keep_prob2, _id='1'):
     # left hidden
     inputs_l = tf.nn.dropout(inputs_l, keep_prob=keep_prob1)
     hiddens_l = dynamic_rnn(cell, inputs_l, FLAGS.n_hidden, len_l, FLAGS.max_sentence_len, 'l' + _id, 'all')
-    pool_l = tf.reduce_mean(hiddens_l, 2, keep_dims=False)
+    pool_l = tf.reduce_mean(hiddens_l, 1, keep_dims=False)
     # right hidden
     inputs_r = tf.nn.dropout(inputs_r, keep_prob=keep_prob1)
     hiddens_r = dynamic_rnn(cell, inputs_r, FLAGS.n_hidden, len_r, FLAGS.max_sentence_len, 'r' + _id, 'all')
-    pool_r = tf.reduce_mean(hiddens_r, 2, keep_dims=False)
+    pool_r = tf.reduce_mean(hiddens_r, 1, keep_dims=False)
     # attention left
     att_l = bilinear_attention_layer(hiddens_l, pool_r, len_l, FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 'l')
     outputs_l = tf.squeeze(tf.batch_matmul(att_l, hiddens_l))
