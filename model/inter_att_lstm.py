@@ -45,8 +45,8 @@ def main(_):
         keep_prob2 = tf.placeholder(tf.float32)
         x_l = tf.placeholder(tf.int32, [None, FLAGS.max_sentence_len])
         x_r = tf.placeholder(tf.int32, [None, FLAGS.max_sentence_len])
-        len_l = tf.placeholder(tf.int32, [None, FLAGS.max_sentence_len])
-        len_r = tf.placeholder(tf.int32, [None, FLAGS.max_sentence_len])
+        len_l = tf.placeholder(tf.int32, [None])
+        len_r = tf.placeholder(tf.int32, [None])
         y = tf.placeholder(tf.float32, [None, FLAGS.n_class])
 
     inputs_l = tf.nn.embedding_lookup(word_embedding, x_l)
