@@ -41,8 +41,12 @@ def bilinear_attention_layer(inputs, attend, length, n_hidden, l2_reg, random_ba
         # initializer=tf.random_uniform_initializer(-np.sqrt(6.0 / (n_hidden + n_hidden)), np.sqrt(6.0 / (n_hidden + n_hidden))),
         regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
     )
-    M = tf.expand_dims(tf.matmul(attend, w), 2)
-    tmp = tf.reshape(tf.batch_matmul(inputs, M), [batch_size, 1, max_len])
+    inputs = tf.reshape(inputs, [-1, n_hidden])
+    tmp = tf.reshape(tf.matmul(inputs, w), [-1, max_len, n_hidden])
+    attend = tf.expand_dims(attend, 2)
+    tmp = tf.reshape(tf.batch_matmul(tmp, attend), [batch_size, 1, max_len])
+    # M = tf.expand_dims(tf.matmul(attend, w), 2)
+    # tmp = tf.reshape(tf.batch_matmul(inputs, M), [batch_size, 1, max_len])
     return softmax_with_len(tmp, length, max_len)
 
 

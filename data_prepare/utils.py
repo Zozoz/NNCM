@@ -333,3 +333,36 @@ def load_inputs_document_nohn(input_file, word_id_file, max_sen_len, _type=None,
 
     return np.asarray(x), np.asarray(y), np.asarray(sen_len)
 
+
+def load_sentence(src_file, word2id, max_sen_len, freq=5):
+    sf = open(src_file)
+    x1, x2, len1, len2, y = [], [], [], [], []
+    def get_q_id(q):
+        i = 0
+        tx = []
+        for word in q:
+            if i < max_sen_len and word in word2id:
+                tx.append(word2id[word])
+                i += 1
+        tx += ([0] * (max_sen_len - i))
+        return tx, i
+    for line in sf:
+        line = line.lower().split(' || ')
+        q1 = line[0].split()
+        q2 = line[1].split()
+        is_d = line[2][0]
+        tx, l = get_q_id(q1)
+        x1.append(tx)
+        len1.append(l)
+        tx, l = get_q_id(q2)
+        x2.append(tx)
+        len2.append(l)
+        y.append([0, 1] if is_d == '0' else [1, 0])
+    index = range(len(y))
+    # np.random.shuffle(index)
+    x1 = np.asarray(x1, dtype=np.int32)
+    x2 = np.asarray(x2, dtype=np.int32)
+    len1 = np.asarray(len1, dtype=np.int32)
+    len2 = np.asarray(len2, dtype=np.int32)
+    y = np.asarray(y, dtype=np.int32)
+    return x1, x2, len1, len2, y
