@@ -10,9 +10,10 @@ sys.path.append(os.getcwd())
 import numpy as np
 import tensorflow as tf
 
+from sklearn.metrics import precision_score, recall_score, f1_score
 from newbie_nn.config import *
 from newbie_nn.nn_layer import dynamic_rnn, bi_dynamic_rnn, softmax_layer
-from newbie_nn.att_layer import mlp_attention_layer
+from newbie_nn.att_layer import mlp_attention_layer, Mlp_attention_layer, softmax_with_len
 from data_prepare.utils import load_w2v, batch_index, load_word_embedding, load_inputs_document
 
 tf.app.flags.DEFINE_float('alpha', 0.6, 'learning rate')
@@ -27,6 +28,12 @@ def hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2, _id='1'):
     hiddens_sen = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, sen_len, FLAGS.max_sentence_len, 'sentence' + _id, 'all')
     alpha_sen = mlp_attention_layer(hiddens_sen, sen_len, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 'sentence' + _id)
     outputs_sen = tf.reshape(tf.batch_matmul(alpha_sen, hiddens_sen), [-1, FLAGS.max_doc_len, 2 * FLAGS.n_hidden])
+
+    sen_len = tf.reshape(sen_len, [-1])
+    sen_len = tf.cast(sen_len, tf.float32)
+    alpha = 1.0 - tf.cast(sen_len / (tf.reduce_sum(sen_len, 1, keep_dims=True) + 1), tf.float32)
+    alpha = tf.reshape(softmax_with_len(alpha, doc_len, FLAGS.max_doc_len), [-1, FLAGS.max_doc_len, 1])
+    outputs_sen *= alpha
 
     hiddens_doc = bi_dynamic_rnn(cell, outputs_sen, FLAGS.n_hidden, doc_len, FLAGS.max_doc_len, 'doc' + _id, 'all')
     alpha_doc = mlp_attention_layer(hiddens_doc, doc_len, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 'doc' + _id)
@@ -89,6 +96,8 @@ def main(_):
     acc_num, acc_prob = acc_func(y, prob)
     global_step = tf.Variable(0, name='tr_global_step', trainable=False)
     optimizer = train_func(loss, FLAGS.learning_rate, global_step)
+    true_y = tf.argmax(y, 1)
+    pred_y = tf.argmax(prob, 1)
 
     title = '-d1-{}d2-{}b-{}r-{}l2-{}sen-{}dim-{}h-{}c-{}'.format(
         FLAGS.keep_prob1,
@@ -174,6 +183,7 @@ def main(_):
                 yield feed_dict, len(index)
 
         max_acc, max_prob, step = 0., None, None
+        max_ty, max_py = None, None
         for i in xrange(FLAGS.n_iter):
             for train, _ in get_batch_data(tr_x, tr_sen_len, tr_doc_len, tr_x_r, tr_sen_len_r, tr_doc_len_r, tr_y,
                                            FLAGS.batch_size, FLAGS.keep_prob1, FLAGS.keep_prob2):
@@ -182,12 +192,13 @@ def main(_):
                 # embed_update = tf.assign(word_embedding, tf.concat(0, [tf.zeros([1, FLAGS.embedding_dim]), word_embedding[1:]]))
                 # sess.run(embed_update)
 
-            saver.save(sess, save_dir, global_step=step)
-
-            acc, cost, cnt, p = 0., 0., 0, []
+            acc, cost, cnt = 0., 0., 0
+            p, ty, py = [], [], []
             for test, num in get_batch_data(te_x, te_sen_len, te_doc_len, te_x_r, te_sen_len_r, te_doc_len_r, te_y, 2000, 1.0, 1.0, False):
-                _loss, _acc, _p = sess.run([loss, acc_num, prob], feed_dict=test)
+                _loss, _acc, _p, _ty, _py = sess.run([loss, acc_num, prob, true_y, pred_y], feed_dict=test)
                 p += list(_p)
+                ty += list(_ty)
+                py += list(_py)
                 acc += _acc
                 cost += _loss * num
                 cnt += num
@@ -200,6 +211,13 @@ def main(_):
             if acc > max_acc:
                 max_acc = acc
                 max_prob = p
+                max_ty = ty
+                max_py = py
+                saver.save(sess, save_dir, global_step=step)
+
+        print 'P:', precision_score(max_ty, max_py, average=None)
+        print 'R:', recall_score(max_ty, max_py, average=None)
+        print 'F:', f1_score(max_ty, max_py, average=None)
 
         fp = open(FLAGS.prob_file, 'w')
         for item in max_prob:
