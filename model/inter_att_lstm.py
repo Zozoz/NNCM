@@ -31,7 +31,7 @@ def ian(inputs_l, len_l, inputs_r, len_r, keep_prob1, keep_prob2, _id='1'):
     att_r = bilinear_attention_layer(hiddens_r, pool_l, len_r, FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 'r')
     outputs_r = tf.squeeze(tf.batch_matmul(att_r, hiddens_r))
 
-    outputs = tf.concat(-1, [outputs_l, outputs_r])
+    outputs = tf.concat(2, [outputs_l, outputs_r])
     prob = softmax_layer(outputs, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
     return prob
 
