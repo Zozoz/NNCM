@@ -11,11 +11,13 @@ from sklearn.metrics import precision_score, recall_score, f1_score
 import tensorflow as tf
 from newbie_nn.nn_layer import dynamic_rnn, softmax_layer, bi_dynamic_rnn
 from newbie_nn.att_layer import dot_produce_attention_layer, bilinear_attention_layer, mlp_attention_layer, Mlp_attention_layer
+from newbie_nn.att_layer import softmax_with_len
 from newbie_nn.config import *
-from data_prepare.utils import load_w2v, batch_index, load_word_embedding, load_aspect2id, load_inputs_twitter
+from data_prepare.utils import load_w2v, batch_index, load_inputs_twitter
 tf.app.flags.DEFINE_string('is_m', '1', 'prob')
 tf.app.flags.DEFINE_string('is_r', '1', 'prob')
 tf.app.flags.DEFINE_string('is_bi', '1', 'prob')
+tf.app.flags.DEFINE_integer('max_target_len', 10, 'max target length')
 
 
 def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
@@ -121,11 +123,13 @@ def main(_):
             x_bw = tf.placeholder(tf.int32, [None, FLAGS.max_sentence_len])
             sen_len_bw = tf.placeholder(tf.int32, [None])
 
-            target_words = tf.placeholder(tf.int32, [None, 1])
+            target_words = tf.placeholder(tf.int32, [None, FLAGS.max_target_len])
+            tar_len = tf.placeholder(tf.int32, [None])
 
         inputs_fw = tf.nn.embedding_lookup(word_embedding, x)
         inputs_bw = tf.nn.embedding_lookup(word_embedding, x_bw)
         target = tf.nn.embedding_lookup(word_embedding, target_words)
+        target = softmax_with_len(target, tar_len, FLAGS.max_target_len)
         # for MLP & DOT
         batch_size = tf.shape(inputs_bw)[0]
         target = tf.zeros([batch_size, FLAGS.max_sentence_len, FLAGS.embedding_dim]) + target
@@ -183,22 +187,24 @@ def main(_):
         else:
             is_r = False
 
-        tr_x, tr_sen_len, tr_x_bw, tr_sen_len_bw, tr_y, tr_target_word = load_inputs_twitter(
+        tr_x, tr_sen_len, tr_x_bw, tr_sen_len_bw, tr_y, tr_target_word, tr_tar_len = load_inputs_twitter(
             FLAGS.train_file_path,
             word_id_mapping,
             FLAGS.max_sentence_len,
             'TC',
-            is_r
+            is_r,
+            FLAGS.max_target_len
         )
-        te_x, te_sen_len, te_x_bw, te_sen_len_bw, te_y, te_target_word = load_inputs_twitter(
+        te_x, te_sen_len, te_x_bw, te_sen_len_bw, te_y, te_target_word, te_tar_len = load_inputs_twitter(
             FLAGS.test_file_path,
             word_id_mapping,
             FLAGS.max_sentence_len,
             'TC',
-            is_r
+            is_r,
+            FLAGS.max_target_len
         )
 
-        def get_batch_data(x_f, sen_len_f, x_b, sen_len_b, yi, target, batch_size, kp1, kp2, is_shuffle=True):
+        def get_batch_data(x_f, sen_len_f, x_b, sen_len_b, yi, target, tl, batch_size, kp1, kp2, is_shuffle=True):
             for index in batch_index(len(yi), batch_size, 1, is_shuffle):
                 feed_dict = {
                     x: x_f[index],
@@ -207,6 +213,7 @@ def main(_):
                     sen_len: sen_len_f[index],
                     sen_len_bw: sen_len_b[index],
                     target_words: target[index],
+                    tar_len: tl[index],
                     keep_prob1: kp1,
                     keep_prob2: kp2,
                 }
@@ -217,8 +224,8 @@ def main(_):
         max_ty, max_py = None, None
         step = None
         for i in xrange(FLAGS.n_iter):
-            for train, _ in get_batch_data(tr_x, tr_sen_len, tr_x_bw, tr_sen_len_bw, tr_y, tr_target_word, FLAGS.batch_size,
-                                                FLAGS.keep_prob1, FLAGS.keep_prob2):
+            for train, _ in get_batch_data(tr_x, tr_sen_len, tr_x_bw, tr_sen_len_bw, tr_y, tr_target_word, tr_tar_len,
+                                           FLAGS.batch_size, FLAGS.keep_prob1, FLAGS.keep_prob2):
                 _, step, summary = sess.run([optimizer, global_step, train_summary_op], feed_dict=train)
                 train_summary_writer.add_summary(summary, step)
                 # embed_update = tf.assign(word_embedding, tf.concat(0, [tf.zeros([1, FLAGS.embedding_dim]), word_embedding[1:]]))
@@ -227,7 +234,8 @@ def main(_):
 
             acc, cost, cnt = 0., 0., 0
             fw, bw, ty, py = [], [], [], []
-            for test, num in get_batch_data(te_x, te_sen_len, te_x_bw, te_sen_len_bw, te_y, te_target_word, 2000, 1.0, 1.0, False):
+            for test, num in get_batch_data(te_x, te_sen_len, te_x_bw, te_sen_len_bw, te_y,
+                                            te_target_word, te_tar_len, 2000, 1.0, 1.0, False):
                 if FLAGS.method == 'TD-ATT':
                     _loss, _acc, _fw, _bw, _ty, _py = sess.run(
                         [loss, acc_num, alpha_fw, alpha_bw, true_y, pred_y], feed_dict=test)

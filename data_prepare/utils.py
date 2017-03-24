@@ -107,7 +107,7 @@ def change_y_to_onehot(y):
     return np.asarray(onehot, dtype=np.int32)
 
 
-def load_inputs_twitter(input_file, word_id_file, sentence_len, type_='', is_r=True, encoding='utf8'):
+def load_inputs_twitter(input_file, word_id_file, sentence_len, type_='', is_r=True, target_len=10, encoding='utf8'):
     if type(word_id_file) is str:
         word_to_id = load_word_id_mapping(word_id_file)
     else:
@@ -117,16 +117,20 @@ def load_inputs_twitter(input_file, word_id_file, sentence_len, type_='', is_r=T
     x, y, sen_len = [], [], []
     x_r, sen_len_r = [], []
     target_words = []
+    tar_len = []
     lines = open(input_file).readlines()
     for i in xrange(0, len(lines), 3):
         words = lines[i + 1].decode(encoding).lower().split()
         # target_word = map(lambda w: word_to_id.get(w, 0), target_word)
         # target_words.append([target_word[0]])
 
-        target_word = [0]
+        target_word = []
         for w in words:
             if w in word_to_id:
-                target_word = [word_to_id[w]]
+                target_word.append(word_to_id[w])
+        l = len(target_word)
+        tar_len.append(l)
+        target_word += ([0] * (target_len - l))
         target_words.append(target_word)
 
         y.append(lines[i + 2].strip().split()[0])
@@ -163,8 +167,8 @@ def load_inputs_twitter(input_file, word_id_file, sentence_len, type_='', is_r=T
         return np.asarray(x), np.asarray(sen_len), np.asarray(x_r), \
                np.asarray(sen_len_r), np.asarray(y)
     elif type_ == 'TC':
-        return np.asarray(x), np.asarray(sen_len), np.asarray(x_r), \
-               np.asarray(sen_len_r), np.asarray(y), np.asarray(target_words)
+        return np.asarray(x), np.asarray(sen_len), np.asarray(x_r), np.asarray(sen_len_r), \
+               np.asarray(y), np.asarray(target_words), np.asarray(tar_len)
     else:
         return np.asarray(x), np.asarray(sen_len), np.asarray(y)
 
