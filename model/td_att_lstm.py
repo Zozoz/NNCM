@@ -9,9 +9,8 @@ sys.path.append(os.getcwd())
 
 from sklearn.metrics import precision_score, recall_score, f1_score
 import tensorflow as tf
-from newbie_nn.nn_layer import dynamic_rnn, softmax_layer, bi_dynamic_rnn
+from newbie_nn.nn_layer import dynamic_rnn, softmax_layer, bi_dynamic_rnn, reduce_mean_with_len
 from newbie_nn.att_layer import dot_produce_attention_layer, bilinear_attention_layer, mlp_attention_layer, Mlp_attention_layer
-from newbie_nn.att_layer import softmax_with_len
 from newbie_nn.config import *
 from data_prepare.utils import load_w2v, batch_index, load_inputs_twitter
 tf.app.flags.DEFINE_string('is_m', '1', 'prob')
@@ -129,7 +128,7 @@ def main(_):
         inputs_fw = tf.nn.embedding_lookup(word_embedding, x)
         inputs_bw = tf.nn.embedding_lookup(word_embedding, x_bw)
         target = tf.nn.embedding_lookup(word_embedding, target_words)
-        target = softmax_with_len(target, tar_len, FLAGS.max_target_len)
+        target = reduce_mean_with_len(target, tar_len)
         # for MLP & DOT
         batch_size = tf.shape(inputs_bw)[0]
         target = tf.zeros([batch_size, FLAGS.max_sentence_len, FLAGS.embedding_dim]) + target
