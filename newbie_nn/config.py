@@ -42,6 +42,14 @@ tf.app.flags.DEFINE_string('saver_file', 'prob1.txt', 'prob')
 tf.app.flags.DEFINE_string('model_num', '100', 'prob')
 
 
+def print_config():
+    FLAGS._parse_flags()
+    print '\nParameters:'
+    for k, v in sorted(FLAGS.__flags.items()):
+        print '{}={}'.format(k, v)
+    print
+
+
 def loss_func(y, prob):
     reg_loss = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
     # loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(prob, y))

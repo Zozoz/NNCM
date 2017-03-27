@@ -59,6 +59,7 @@ def main(_):
     acc_num, acc_prob = acc_func(y, prob)
     global_step = tf.Variable(0, name='tr_global_step', trainable=False)
     optimizer = tf.train.MomentumOptimizer(learning_rate=FLAGS.learning_rate, momentum=0.5).minimize(loss, global_step=global_step)
+    optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate).minimize(loss, global_step=global_step)
     # optimizer = train_func(loss, FLAGS.learning_rate, global_step)
     true_y = tf.argmax(y, 1)
     pred_y = tf.argmax(prob, 1)
