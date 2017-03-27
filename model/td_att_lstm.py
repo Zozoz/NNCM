@@ -133,6 +133,7 @@ def main(_):
         loss = loss_func(y, prob)
         acc_num, acc_prob = acc_func(y, prob)
         global_step = tf.Variable(0, name='tr_global_step', trainable=False)
+        optimizer = tf.train.MomentumOptimizer(learning_rate=FLAGS.learning_rate, momentum=0.5).minimize(loss, global_step=global_step)
         optimizer = train_func(loss, FLAGS.learning_rate, global_step)
         true_y = tf.argmax(y, 1)
         pred_y = tf.argmax(prob, 1)
@@ -246,9 +247,12 @@ def main(_):
                 max_bw = bw
                 max_ty = ty
                 max_py = py
-        print 'P:', precision_score(max_ty, max_py, average=None)
-        print 'R:', recall_score(max_ty, max_py, average=None)
-        print 'F:', f1_score(max_ty, max_py, average=None)
+        P = precision_score(max_ty, max_py, average=None)
+        R = recall_score(max_ty, max_py, average=None)
+        F1 = f1_score(max_ty, max_py, average=None)
+        print 'P:', P, 'avg=', sum(P) / FLAGS.n_class
+        print 'R:', R, 'avg=', sum(R) / FLAGS.n_class
+        print 'F1:', F1, 'avg=', sum(F1) / FLAGS.n_class
 
         fp = open(FLAGS.prob_file + '_fw', 'w')
         for y1, y2, ws in zip(max_ty, max_py, max_fw):
