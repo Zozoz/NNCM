@@ -116,7 +116,7 @@ def main(_):
         inputs_fw = tf.nn.embedding_lookup(word_embedding, x)
         inputs_bw = tf.nn.embedding_lookup(word_embedding, x_bw)
         target = tf.nn.embedding_lookup(word_embedding, target_words)
-        target = reduce_mean_with_len(target, tar_len)
+        target = tf.expand_dims(reduce_mean_with_len(target, tar_len), 1)
         # for MLP & DOT
         batch_size = tf.shape(inputs_bw)[0]
         target = tf.zeros([batch_size, FLAGS.max_sentence_len, FLAGS.embedding_dim]) + target
@@ -148,7 +148,6 @@ def main(_):
             FLAGS.n_hidden,
             FLAGS.n_class
         )
-
 
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
