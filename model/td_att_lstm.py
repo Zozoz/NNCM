@@ -29,20 +29,14 @@ def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_
         hidden_fw = bi_dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
         ht_fw = tf.concat(2, [hidden_fw, target])
         # alpha_fw = dot_produce_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
-        if FLAGS.is_m == '1':
-            alpha_fw = mlp_attention_layer(ht_fw, sen_len_fw, 2 * FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
-        else:
-            alpha_fw = Mlp_attention_layer(ht_fw, sen_len_fw, 2 * FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+        alpha_fw = mlp_attention_layer(ht_fw, sen_len_fw, 2 * FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
         # alpha_fw = bilinear_attention_layer(hidden_fw, target, sen_len_fw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
         r_fw = tf.reshape(tf.batch_matmul(alpha_fw, hidden_fw), [-1, 2 * FLAGS.n_hidden])
     else:
         hidden_fw = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'TC-ATT-1', type_)
         ht_fw = tf.concat(2, [hidden_fw, target])
         # alpha_fw = dot_produce_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
-        if FLAGS.is_m == '1':
-            alpha_fw = mlp_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
-        else:
-            alpha_fw = Mlp_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
+        alpha_fw = mlp_attention_layer(ht_fw, sen_len_fw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
         # alpha_fw = bilinear_attention_layer(hidden_fw, target, sen_len_fw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 1)
         r_fw = tf.reshape(tf.batch_matmul(alpha_fw, hidden_fw), [-1, FLAGS.n_hidden])
 
@@ -51,20 +45,14 @@ def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_
         hidden_bw = bi_dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
         ht_bw = tf.concat(2, [hidden_bw, target])
         # alpha_bw = dot_produce_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
-        if FLAGS.is_m == '1':
-            alpha_bw = mlp_attention_layer(ht_bw, sen_len_bw, 2 * FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
-        else:
-            alpha_bw = Mlp_attention_layer(ht_bw, sen_len_bw, 2 * FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
+        alpha_bw = mlp_attention_layer(ht_bw, sen_len_bw, 2 * FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
         # alpha_bw = bilinear_attention_layer(hidden_bw, target, sen_len_bw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
         r_bw = tf.reshape(tf.batch_matmul(alpha_bw, hidden_bw), [-1, 2 * FLAGS.n_hidden])
     else:
         hidden_bw = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'TC-ATT-2', type_)
         ht_bw = tf.concat(2, [hidden_bw, target])
         # alpha_bw = dot_produce_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
-        if FLAGS.is_m == '1':
-            alpha_bw = mlp_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
-        else:
-            alpha_bw = Mlp_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
+        alpha_bw = mlp_attention_layer(ht_bw, sen_len_bw, FLAGS.n_hidden + FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
         # alpha_bw = bilinear_attention_layer(hidden_bw, target, sen_len_bw, FLAGS.embedding_dim, FLAGS.l2_reg, FLAGS.random_base, 2)
         r_bw = tf.reshape(tf.batch_matmul(alpha_bw, hidden_bw), [-1, FLAGS.n_hidden])
 

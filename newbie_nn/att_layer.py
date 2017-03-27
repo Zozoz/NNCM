@@ -99,8 +99,8 @@ def mlp_attention_layer(inputs, length, n_hidden, l2_reg, random_base, layer_id=
     b = tf.get_variable(
         name='att_b' + str(layer_id),
         shape=[n_hidden],
-        initializer=tf.random_normal_initializer(mean=0.0, stddev=np.sqrt(2. / (n_hidden + n_hidden))),
-        # initializer=tf.random_uniform_initializer(-random_base, random_base),
+        # initializer=tf.random_normal_initializer(mean=0.0, stddev=np.sqrt(2. / (n_hidden + n_hidden))),
+        initializer=tf.random_uniform_initializer(-0., 0.),
         regularizer=tf.contrib.layers.l2_regularizer(l2_reg)
     )
     u = tf.get_variable(
