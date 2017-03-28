@@ -29,8 +29,8 @@ def ian(input_fw, input_bw, sen_len_fw, sen_len_bw, target, sen_len_tr, keep_pro
     hiddens_r = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'r' + _id, 'all')
     # target hidden
     target = tf.nn.dropout(target, keep_prob=keep_prob1)
-    hiddens_r = dynamic_rnn(cell, target, FLAGS.n_hidden, sen_len_tr, FLAGS.max_sentence_len, 'r' + _id, 'all')
-    pool_t = tf.reduce_mean(hiddens_r, 1, keep_dims=False)
+    hiddens_t = dynamic_rnn(cell, target, FLAGS.n_hidden, sen_len_tr, FLAGS.max_sentence_len, 't' + _id, 'all')
+    pool_t = tf.reduce_mean(hiddens_t, 1, keep_dims=False)
 
     # attention left
     att_l = bilinear_attention_layer(hiddens_l, pool_t, sen_len_fw, FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 'l')
