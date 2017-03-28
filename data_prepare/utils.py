@@ -128,9 +128,9 @@ def load_inputs_twitter(input_file, word_id_file, sentence_len, type_='', is_r=T
         for w in words:
             if w in word_to_id:
                 target_word.append(word_to_id[w])
-        l = len(target_word)
+        l = min(len(target_word), target_len)
         tar_len.append(l)
-        target_words.append(target_word + [0] * (target_len - l))
+        target_words.append(target_word[:l] + [0] * (target_len - l))
 
         y.append(lines[i + 2].strip().split()[0])
 

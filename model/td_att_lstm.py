@@ -19,6 +19,31 @@ tf.app.flags.DEFINE_string('is_bi', '1', 'prob')
 tf.app.flags.DEFINE_integer('max_target_len', 10, 'max target length')
 
 
+def ian(input_fw, input_bw, sen_len_fw, sen_len_bw, target, sen_len_tr, keep_prob1, keep_prob2, _id='all'):
+    cell = tf.nn.rnn_cell.LSTMCell
+    # left hidden
+    input_fw = tf.nn.dropout(input_fw, keep_prob=keep_prob1)
+    hiddens_l = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'l' + _id, 'all')
+    # right hidden
+    input_bw = tf.nn.dropout(input_bw, keep_prob=keep_prob1)
+    hiddens_r = dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'r' + _id, 'all')
+    # target hidden
+    target = tf.nn.dropout(target, keep_prob=keep_prob1)
+    hiddens_r = dynamic_rnn(cell, target, FLAGS.n_hidden, sen_len_tr, FLAGS.max_sentence_len, 'r' + _id, 'all')
+    pool_t = tf.reduce_mean(hiddens_r, 1, keep_dims=False)
+
+    # attention left
+    att_l = bilinear_attention_layer(hiddens_l, pool_t, sen_len_fw, FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 'l')
+    outputs_l = tf.squeeze(tf.batch_matmul(att_l, hiddens_l))
+    # attention right
+    att_r = bilinear_attention_layer(hiddens_r, pool_t, sen_len_bw, FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 'r')
+    outputs_r = tf.squeeze(tf.batch_matmul(att_r, hiddens_r))
+
+    outputs = tf.concat(1, [outputs_l, outputs_r])
+    prob = softmax_layer(outputs, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+    return prob
+
+
 def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
     print 'I am TD-ATT.'
     cell = tf.nn.rnn_cell.LSTMCell
@@ -116,14 +141,17 @@ def main(_):
         inputs_fw = tf.nn.embedding_lookup(word_embedding, x)
         inputs_bw = tf.nn.embedding_lookup(word_embedding, x_bw)
         target = tf.nn.embedding_lookup(word_embedding, target_words)
-        target = tf.expand_dims(reduce_mean_with_len(target, tar_len), 1)
+        target = reduce_mean_with_len(target, tar_len)
         # for MLP & DOT
+        target = tf.expand_dims(target, 1)
         batch_size = tf.shape(inputs_bw)[0]
         target = tf.zeros([batch_size, FLAGS.max_sentence_len, FLAGS.embedding_dim]) + target
         # for BL
         # target = tf.squeeze(target)
         alpha_fw, alpha_bw = None, None
-        if FLAGS.method == 'TD-ATT':
+        if FLAGS.method == 'IAN':
+            prob = ian(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, tar_len, keep_prob1, keep_prob2, 'all')
+        elif FLAGS.method == 'TD-ATT':
             prob, alpha_fw, alpha_bw = TD_att(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, 'all')
         elif FLAGS.method == 'TD-BI':
             prob = TD_bi(inputs_fw, inputs_bw, sen_len, sen_len_bw, target, keep_prob1, keep_prob2, FLAGS.t1)
