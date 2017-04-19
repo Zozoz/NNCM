@@ -19,7 +19,7 @@ tf.app.flags.DEFINE_string('is_bi', '1', 'prob')
 tf.app.flags.DEFINE_integer('max_target_len', 10, 'max target length')
 
 
-def ian(input_fw, input_bw, sen_len_fw, sen_len_bw, target, sen_len_tr, keep_prob1, keep_prob2, _id='all'):
+def ian_t(input_fw, input_bw, sen_len_fw, sen_len_bw, target, sen_len_tr, keep_prob1, keep_prob2, _id='all'):
     cell = tf.nn.rnn_cell.LSTMCell
     # left hidden
     input_fw = tf.nn.dropout(input_fw, keep_prob=keep_prob1)
@@ -42,6 +42,45 @@ def ian(input_fw, input_bw, sen_len_fw, sen_len_bw, target, sen_len_tr, keep_pro
     outputs = tf.concat(1, [outputs_l, outputs_r])
     prob = softmax_layer(outputs, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
     return prob
+
+
+def ian(input_fw, input_bw, sen_len_fw, sen_len_bw, target, sen_len_tr, keep_prob1, keep_prob2, _id='all'):
+    cell = tf.nn.rnn_cell.LSTMCell
+    # left hidden
+    input_fw = tf.nn.dropout(input_fw, keep_prob=keep_prob1)
+    hiddens_l = bi_dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'l' + _id, 'all')
+    # pool_l = reduce_mean_with_len(hiddens_l, sen_len_fw)
+    # right hidden
+    input_bw = tf.nn.dropout(input_bw, keep_prob=keep_prob1)
+    hiddens_r = bi_dynamic_rnn(cell, input_bw, FLAGS.n_hidden, sen_len_bw, FLAGS.max_sentence_len, 'r' + _id, 'all')
+    # pool_r = reduce_mean_with_len(hiddens_r, sen_len_bw)
+    # target hidden
+    target = tf.nn.dropout(target, keep_prob=keep_prob1)
+    hiddens_t = bi_dynamic_rnn(cell, target, FLAGS.n_hidden, sen_len_tr, FLAGS.max_sentence_len, 't' + _id, 'all')
+    pool_t = reduce_mean_with_len(hiddens_t, sen_len_tr)
+    # pool_t = tf.concat(1, [target, target])
+
+    # attention left
+    att_l = bilinear_attention_layer(hiddens_l, pool_t, sen_len_fw, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 'l')
+    outputs_l = tf.squeeze(tf.batch_matmul(att_l, hiddens_l))
+    # index_l = tf.argmax(tf.squeeze(att_l), 1)
+    # pool_l = tf.gather(hiddens_l, index_l)
+    # # attention right
+    att_r = bilinear_attention_layer(hiddens_r, pool_t, sen_len_bw, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 'r')
+    outputs_r = tf.squeeze(tf.batch_matmul(att_r, hiddens_r))
+    # index_r = tf.argmax(tf.squeeze(att_r), 1)
+    # pool_r = tf.gather(hiddens_r, index_r)
+
+    # attention target
+    # att_t_l = bilinear_attention_layer(hiddens_t, pool_l, sen_len_tr, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 'tl')
+    # output_t_l = tf.squeeze(tf.batch_matmul(att_t_l, hiddens_t))
+    # att_t_r = bilinear_attention_layer(hiddens_t, pool_r, sen_len_tr, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 'tr')
+    # output_t_r = tf.squeeze(tf.batch_matmul(att_t_r, hiddens_t))
+
+    outputs = tf.concat(1, [outputs_l, outputs_r, pool_t])
+    # outputs = tf.concat(1, [outputs_l, outputs_r, output_t_l, output_t_r])
+    prob = softmax_layer(outputs, 8 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
+    return prob, att_l, att_r
 
 
 def TD_att(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_prob2, type_='last'):
@@ -119,6 +158,7 @@ def TD_bi(input_fw, input_bw, sen_len_fw, sen_len_bw, target, keep_prob1, keep_p
 
 
 def main(_):
+    print_config()
     with tf.device('/gpu:1'):
         word_id_mapping, w2v = load_w2v(FLAGS.embedding_file_path, FLAGS.embedding_dim)
         word_embedding = tf.constant(w2v, name='word_embedding')
