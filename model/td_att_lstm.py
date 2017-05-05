@@ -20,7 +20,7 @@ tf.app.flags.DEFINE_integer('max_target_len', 10, 'max target length')
 
 
 def ian_t(input_fw, input_bw, sen_len_fw, sen_len_bw, target, sen_len_tr, keep_prob1, keep_prob2, _id='all'):
-    cell = tf.nn.rnn_cell.LSTMCell
+    cell = tf.contrib.rnn.LSTMCell
     # left hidden
     input_fw = tf.nn.dropout(input_fw, keep_prob=keep_prob1)
     hiddens_l = dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'l' + _id, 'all')
@@ -39,13 +39,13 @@ def ian_t(input_fw, input_bw, sen_len_fw, sen_len_bw, target, sen_len_tr, keep_p
     att_r = bilinear_attention_layer(hiddens_r, pool_t, sen_len_bw, FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 'r')
     outputs_r = tf.squeeze(tf.batch_matmul(att_r, hiddens_r))
 
-    outputs = tf.concat(1, [outputs_l, outputs_r])
+    outputs = tf.concat([outputs_l, outputs_r], 1)
     prob = softmax_layer(outputs, 2 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
     return prob
 
 
 def ian(input_fw, input_bw, sen_len_fw, sen_len_bw, target, sen_len_tr, keep_prob1, keep_prob2, _id='all'):
-    cell = tf.nn.rnn_cell.LSTMCell
+    cell = tf.contrib.rnn.LSTMCell
     # left hidden
     input_fw = tf.nn.dropout(input_fw, keep_prob=keep_prob1)
     hiddens_l = bi_dynamic_rnn(cell, input_fw, FLAGS.n_hidden, sen_len_fw, FLAGS.max_sentence_len, 'l' + _id, 'all')
@@ -77,7 +77,7 @@ def ian(input_fw, input_bw, sen_len_fw, sen_len_bw, target, sen_len_tr, keep_pro
     # att_t_r = bilinear_attention_layer(hiddens_t, pool_r, sen_len_tr, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 'tr')
     # output_t_r = tf.squeeze(tf.batch_matmul(att_t_r, hiddens_t))
 
-    outputs = tf.concat(1, [outputs_l, outputs_r, pool_t])
+    outputs = tf.concat([outputs_l, outputs_r, pool_t], 1)
     # outputs = tf.concat(1, [outputs_l, outputs_r, output_t_l, output_t_r])
     prob = softmax_layer(outputs, 8 * FLAGS.n_hidden, FLAGS.random_base, keep_prob2, FLAGS.l2_reg, FLAGS.n_class)
     return prob, att_l, att_r

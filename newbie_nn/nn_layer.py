@@ -58,9 +58,9 @@ def bi_dynamic_rnn(cell, inputs, n_hidden, length, max_len, scope_name, out_type
     if out_type == 'last':
         outputs_fw, outputs_bw = outputs
         outputs_bw = tf.reverse_sequence(outputs_bw, tf.cast(length, tf.int64), seq_dim=1)
-        outputs = tf.concat(2, [outputs_fw, outputs_bw])
+        outputs = tf.concat([outputs_fw, outputs_bw], 2)
     else:
-        outputs = tf.concat(2, outputs)  # batch_size * max_len * 2n_hidden
+        outputs = tf.concat(outputs, 2)  # batch_size * max_len * 2n_hidden
     batch_size = tf.shape(outputs)[0]
     if out_type == 'last':
         index = tf.range(0, batch_size) * max_len + (length - 1)
@@ -95,7 +95,7 @@ def bi_dynamic_rnn_diff(cell, inputs_fw, inputs_bw, n_hidden, l_fw, l_bw, max_le
         index = tf.range(0, batch_size) * max_len + (l_bw - 1)
         output_bw = tf.gather(tf.reshape(outputs_bw, [-1, n_hidden]), index)  # batch_size * n_hidden
 
-    outputs = tf.concat(1, [output_fw, output_bw])  # batch_size * 2n_hidden
+    outputs = tf.concat([output_fw, output_bw], 1)  # batch_size * 2n_hidden
     return outputs
 
 
@@ -106,7 +106,7 @@ def stack_bi_dynamic_rnn(cells_fw, cells_bw, inputs, n_hidden, n_layer, length, 
     if out_type == 'last':
         outputs_fw, outputs_bw = tf.split(2, 2, outputs)
         outputs_bw = tf.reverse_sequence(outputs_bw, tf.cast(length, tf.int64), seq_dim=1)
-        outputs = tf.concat(2, [outputs_fw, outputs_bw])
+        outputs = tf.concat([outputs_fw, outputs_bw], 2)
     batch_size = tf.shape(outputs)[0]
     if out_type == 'last':
         index = tf.range(0, batch_size) * max_len + (length - 1)

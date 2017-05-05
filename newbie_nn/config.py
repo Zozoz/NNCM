@@ -74,16 +74,16 @@ def train_func(loss, r, global_step, optimizer=None):
 
 
 def summary_func(loss, acc, test_loss, test_acc, _dir, title, sess):
-    summary_loss = tf.scalar_summary('loss' + title, loss)
-    summary_acc = tf.scalar_summary('acc' + title, acc)
-    test_summary_loss = tf.scalar_summary('loss' + title, test_loss)
-    test_summary_acc = tf.scalar_summary('acc' + title, test_acc)
-    train_summary_op = tf.merge_summary([summary_loss, summary_acc])
-    validate_summary_op = tf.merge_summary([summary_loss, summary_acc])
-    test_summary_op = tf.merge_summary([test_summary_loss, test_summary_acc])
-    train_summary_writer = tf.train.SummaryWriter(_dir + '/train', sess.graph)
-    test_summary_writer = tf.train.SummaryWriter(_dir + '/test', sess.graph)
-    validate_summary_writer = tf.train.SummaryWriter(_dir + '/validate', sess.graph)
+    summary_loss = tf.summary.scalar('loss' + title, loss)
+    summary_acc = tf.summary.scalar('acc' + title, acc)
+    test_summary_loss = tf.summary.scalar('loss' + title, test_loss)
+    test_summary_acc = tf.summary.scalar('acc' + title, test_acc)
+    train_summary_op = tf.summary.merge([summary_loss, summary_acc])
+    validate_summary_op = tf.summary.merge([summary_loss, summary_acc])
+    test_summary_op = tf.summary.merge([test_summary_loss, test_summary_acc])
+    train_summary_writer = tf.summary.FileWriter(_dir + '/train', sess.graph)
+    test_summary_writer = tf.summary.FileWriter(_dir + '/test')
+    validate_summary_writer = tf.summary.FileWriter(_dir + '/validate')
     return train_summary_op, test_summary_op, validate_summary_op, \
         train_summary_writer, test_summary_writer, validate_summary_writer
 

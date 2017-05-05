@@ -136,9 +136,8 @@ def main(_):
                     y_pred = []
                     y_true = []
                     for test, num in get_batch_data(te_x, te_sen_len, te_y, 2200, 1.0, 1.0, False):
-                        _loss, _acc, _summary, _step, y_true_tmp, y_pred_tmp, y_prob_tmp = sess.run(
-                            [loss, acc_num, test_summary_op, global_step, y_t, y_p, prob],
-                            feed_dict=test)
+                        _loss, _acc, _step, y_true_tmp, y_pred_tmp, y_prob_tmp = sess.run(
+                            [loss, acc_num, global_step, y_t, y_p, prob], feed_dict=test)
                         y_prob.extend(y_prob_tmp)
                         y_pred.extend(y_pred_tmp)
                         y_true.extend(y_true_tmp)

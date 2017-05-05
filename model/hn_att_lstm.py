@@ -19,7 +19,7 @@ from data_prepare.utils import load_w2v, batch_index, load_word_embedding, load_
 
 def hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
-    cell = tf.nn.rnn_cell.LSTMCell
+    cell = tf.contrib.rnn.LSTMCell
     sen_len = tf.reshape(sen_len, [-1])
     hiddens_sen = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, sen_len, FLAGS.max_sentence_len, 'sentence', 'all')
     alpha_sen = Mlp_attention_layer(hiddens_sen, sen_len, 2 * FLAGS.n_hidden, FLAGS.l2_reg, FLAGS.random_base, 1)
@@ -39,7 +39,7 @@ def hn_att(inputs, sen_len, doc_len, keep_prob1, keep_prob2):
 
 def hn(inputs, sen_len, doc_len, keep_prob1, keep_prob2, id_=1):
     inputs = tf.nn.dropout(inputs, keep_prob=keep_prob1)
-    cell = tf.nn.rnn_cell.LSTMCell
+    cell = tf.contrib.rnn.LSTMCell
     sen_len = tf.reshape(sen_len, [-1])
     hiddens_sen = bi_dynamic_rnn(cell, inputs, FLAGS.n_hidden, sen_len, FLAGS.max_sentence_len, 'sentence' + str(id_), FLAGS.t1)
     hiddens_sen = tf.reshape(hiddens_sen, [-1, FLAGS.max_doc_len, 2 * FLAGS.n_hidden])
@@ -104,7 +104,7 @@ def main(_):
         save_dir = 'temp_model/' + str(timestamp) + '_' + title + '/'
         saver = saver_func(save_dir)
 
-        init = tf.initialize_all_variables()
+        init = tf.global_variables_initializer()
         sess.run(init)
 
         # saver.restore(sess, '/-')
